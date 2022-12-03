@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Shared;
 
 namespace Day02
 {
@@ -18,7 +19,7 @@ namespace Day02
 
 		private static void Part1()
 		{
-			int result = ReadInput()
+			int result = InputReader.Read<Program>()
 				.Select(s => CalculateScore1(s))
 				.Sum();
 
@@ -46,7 +47,7 @@ namespace Day02
 
 		private static void Part2()
 		{
-			int result = ReadInput()
+			int result = InputReader.Read<Program>()
 				.Select(s => CalculateScore2(s))
 				.Sum();
 
@@ -70,23 +71,6 @@ namespace Day02
 			};
 
 			return result;
-		}
-		private static IEnumerable<string> ReadInput()
-		{
-			using (Stream? stream = typeof(Program).Assembly.GetManifestResourceStream($"{typeof(Program).Namespace}.Input.txt"))
-			{
-				using (StreamReader sr = new StreamReader(stream!))
-				{
-					string? line;
-					do
-					{
-						line = sr.ReadLine();
-						if (line != null)
-							yield return line;
-					}
-					while (line != null);
-				}
-			}
 		}
 	}
 }

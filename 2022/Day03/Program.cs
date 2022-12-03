@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Shared;
 
 namespace Day03
 {
@@ -11,14 +12,11 @@ namespace Day03
 		{
 			Part1();
 			Part2();
-
-			Console.WriteLine("Press enter to exit...");
-			Console.ReadLine();
 		}
 
 		private static void Part1()
 		{
-			var result = ReadInput()
+			var result = InputReader.Read<Program>()
 				.Select(line => new { First = line.Substring(0, line.Length / 2), Second = line.Substring(line.Length / 2) })
 				.Select(pair => pair.First.Intersect(pair.Second).Single())
 				.Select(c => (c < 'a') ? (c - 'A' + 27) : (c - 'a' + 1))
@@ -29,7 +27,7 @@ namespace Day03
 
 		private static void Part2()
 		{
-			var result = ReadInput()
+			var result = InputReader.Read<Program>()
 				.PartitionIntoRangesOfN(3)
 				.Select(range => (range[0].Intersect(range[1])).Intersect(range[2]).Single())
 				.Select(c => (c < 'a') ? (c - 'A' + 27) : (c - 'a' + 1))
@@ -38,22 +36,5 @@ namespace Day03
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 
-		private static IEnumerable<string> ReadInput()
-		{
-			using (Stream? stream = typeof(Program).Assembly.GetManifestResourceStream($"{typeof(Program).Namespace}.Input.txt"))
-			{
-				using (StreamReader sr = new StreamReader(stream!))
-				{
-					string? line;
-					do
-					{
-						line = sr.ReadLine();
-						if (line != null)
-							yield return line;
-					}
-					while (line != null);
-				}
-			}
-		}
 	}
 }

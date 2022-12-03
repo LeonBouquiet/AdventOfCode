@@ -15,4 +15,8 @@
     <EmbeddedResource Include="Input.txt" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Shared.csproj" />
+  </ItemGroup>
+
 </Project>

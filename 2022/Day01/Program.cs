@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Shared;
 
 namespace Day01
 {
@@ -18,7 +19,7 @@ namespace Day01
 
 		private static void Part1()
 		{
-			int? result = ReadInput()
+			int? result = InputReader.Read<Program>()
 				.Select(s => (int?)(!string.IsNullOrWhiteSpace(s) ? Int32.Parse(s) : null))
 				.PartitionIntoRangesBy(i => i == null, includeDelimiters: false)
 				.Select(rng => rng.Sum())
@@ -29,7 +30,7 @@ namespace Day01
 
 		private static void Part2()
 		{
-			int? result = ReadInput()
+			int? result = InputReader.Read<Program>()
 				.Select(s => (int?)(!string.IsNullOrWhiteSpace(s) ? Int32.Parse(s) : null))
 				.PartitionIntoRangesBy(i => i == null, includeDelimiters: false)
 				.Select(rng => rng.Sum())
@@ -40,22 +41,5 @@ namespace Day01
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 
-		private static IEnumerable<string> ReadInput()
-		{
-			using (Stream? stream = typeof(Program).Assembly.GetManifestResourceStream($"{typeof(Program).Namespace}.Input.txt"))
-			{
-				using (StreamReader sr = new StreamReader(stream!))
-				{
-					string? line;
-					do
-					{
-						line = sr.ReadLine();
-						if (line != null)
-							yield return line;
-					}
-					while (line != null);
-				}
-			}
-		}
 	}
 }
