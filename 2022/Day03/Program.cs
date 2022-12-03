@@ -18,14 +18,22 @@ namespace Day03
 
 		private static void Part1()
 		{
-			int? result = 0;
+			var result = ReadInput()
+				.Select(line => new { First = line.Substring(0, line.Length / 2), Second = line.Substring(line.Length / 2) })
+				.Select(pair => pair.First.Intersect(pair.Second).Single())
+				.Select(c => (c < 'a') ? (c - 'A' + 27) : (c - 'a' + 1))
+				.Sum();
 
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
 
 		private static void Part2()
 		{
-			int? result = 0;
+			var result = ReadInput()
+				.PartitionIntoRangesOfN(3)
+				.Select(range => (range[0].Intersect(range[1])).Intersect(range[2]).Single())
+				.Select(c => (c < 'a') ? (c - 'A' + 27) : (c - 'a' + 1))
+				.Sum();
 
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
