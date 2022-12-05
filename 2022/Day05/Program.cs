@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -19,6 +20,22 @@ namespace Day05
 
 		private static void Part1()
 		{
+			Process(ApplyMove1);
+
+			string result = string.Join("", Stacks.Select(s => s.Count > 0 ? s.Peek() : ' '));
+			Console.WriteLine($"The result of part 1 is: {result}");
+		}
+
+		private static void Part2()
+		{
+			Process(ApplyMove2);
+
+			string result = string.Join("", Stacks.Select(s => s.Count > 0 ? s.Peek() : ' '));
+			Console.WriteLine($"The result of part 2 is: {result}");
+		}
+
+		private static void Process(Action<int, int, int> applyMoveAction)
+		{
 			var lines = InputReader.Read<Program>().ToList();
 			string[] stackLines = lines
 				.TakeWhile(s => string.IsNullOrWhiteSpace(s) == false)
@@ -31,7 +48,7 @@ namespace Day05
 
 			stackLines
 				.Reverse()
-				.Skip(1)		//Skip the lines with the column numbers
+				.Skip(1)        //Skip the lines with the column numbers
 				.ToList()
 				.ForEach(s => ParseStackLine(s));
 
@@ -41,24 +58,14 @@ namespace Day05
 
 			Regex moveLineRegex = new Regex(@"move (\d+) from (\d+) to (\d+)", RegexOptions.Compiled);
 			foreach (string moveLine in moveLines)
-			{ 
+			{
 				Match match = moveLineRegex.Match(moveLine);
 				int count = Int32.Parse(match.Groups[1].Value);
 				int sourceIndex = Int32.Parse(match.Groups[2].Value);
 				int targetIndex = Int32.Parse(match.Groups[3].Value);
-				ApplyMove(count, sourceIndex, targetIndex);
+
+				applyMoveAction(count, sourceIndex, targetIndex);
 			}
-
-			string result = string.Join("", Stacks.Select(s => s.Count > 0 ? s.Peek() : ' '));
-
-			Console.WriteLine($"The result of part 1 is: {result}");
-		}
-
-		private static void Part2()
-		{
-			var result = InputReader.Read<Program>();
-
-			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 
 		private static void ParseStackLine(string line)
@@ -75,7 +82,7 @@ namespace Day05
 			}
 		}
 
-		private static void ApplyMove(int count, int sourceIndex, int targetIndex)
+		private static void ApplyMove1(int count, int sourceIndex, int targetIndex)
 		{
 			for(int i = 0; i < count; i++)
 			{
@@ -83,5 +90,16 @@ namespace Day05
 				Stacks[targetIndex - 1].Push(crate);
 			}
 		}
+
+		private static void ApplyMove2(int count, int sourceIndex, int targetIndex)
+		{
+			List<char> cratesToMove = new List<char>();
+			for (int i = 0; i < count; i++)
+				cratesToMove.Add(Stacks[sourceIndex - 1].Pop());
+
+			foreach(char crate in cratesToMove.AsEnumerable().Reverse())
+				Stacks[targetIndex - 1].Push(crate);
+		}
+
 	}
 }
