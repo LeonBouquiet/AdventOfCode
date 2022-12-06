@@ -37,5 +37,19 @@
 				}
 			}
 		}
+
+		public static IEnumerable<TResult> LaggingWindow<TElement, TResult>(this IEnumerable<TElement> elements, int size, Func<int, IEnumerable<TElement>, TResult> projection)
+		{
+			int index = 0;
+			List<TElement> currentWindow = new List<TElement>();
+			foreach(TElement elt in elements)
+			{
+				if (currentWindow.Count == size)
+					currentWindow.RemoveAt(0);
+
+				currentWindow.Add(elt);
+				yield return projection(index++, currentWindow);
+			}
+		}
 	}
 }
