@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Shared;
@@ -59,13 +60,22 @@ namespace Day07
 
 	public class Program
 	{
+		private static Directory _root = null!;
+		private static List<Directory> _allDirectories = null!;
+
 		public static void Main(string[] args)
 		{
+			Stopwatch stopwatch = Stopwatch.StartNew();
+			ParseFileSystemInfo();
+
 			Part1();
 			Part2();
+			stopwatch.Stop();
+
+			Console.WriteLine($"Elapsed time: {stopwatch.ElapsedMilliseconds}ms ({stopwatch.ElapsedTicks} ticks).");
 		}
 
-		private static void Part1()
+		private static void ParseFileSystemInfo()
 		{
 			//Parse the input in commands with their output.
 			var commandsWithOutput = new List<(string Command, List<string> Output)>();
@@ -77,10 +87,10 @@ namespace Day07
 					commandsWithOutput.Last().Output.Add(line);
 			}
 
-			Directory root = new Directory("", null!);
-			List<Directory> allDirectories = new List<Directory>() { root };
+			_root = new Directory("", null!);
+			_allDirectories = new List<Directory>() { _root };
 
-			Directory current = root;
+			Directory current = _root;
 			foreach(var commandWithOutput in commandsWithOutput)
 			{
 				if (commandWithOutput.Command.StartsWith("cd"))
@@ -89,7 +99,7 @@ namespace Day07
 					switch (argument)
 					{
 						case "/":
-							current = root;
+							current = _root;
 							break;
 						case "..":
 							current = current.Parent;
@@ -108,13 +118,16 @@ namespace Day07
 						.Select(line => FileSystemObject.Parse(line, current))
 						.ToList();
 
-					allDirectories.AddRange(current.Contents.OfType<Directory>());
+					_allDirectories.AddRange(current.Contents.OfType<Directory>());
 				}
 				else
 					throw new Exception();
 			}
+		}
 
-			var smallDirs = allDirectories
+		private static void Part1()
+		{
+			var smallDirs = _allDirectories
 				.Where(dir => dir.Size <= 100000)
 				.ToList();
 
@@ -124,8 +137,16 @@ namespace Day07
 
 		private static void Part2()
 		{
-			var result = InputReader.Read<Program>();
+			int usedSpace = _root.Size;
+			int unusedSpace = 70_000_000 - usedSpace;
+			int sizeToFreeUp = 30_000_000 - unusedSpace;
 
+			Directory directoryToDelete = _allDirectories
+				.Where(dir => dir.Size >= sizeToFreeUp)
+				.OrderBy(dir => dir.Size)
+				.First();
+
+			int result = directoryToDelete.Size;
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 
