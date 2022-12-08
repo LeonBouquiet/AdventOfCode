@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Transactions;
 using Shared;
 
 namespace Day08
@@ -30,22 +31,19 @@ namespace Day08
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
 
-		private static bool IsVisibleFromOutside(Location loc)
+		private static bool IsVisibleFromOutside(Location target)
 		{
-			int highestFromLeft = -1;
-			for (int x = 0; x < loc.X; x++)
-				highestFromLeft = Math.Max(highestFromLeft, _grid[x, loc.Y]);
-			int highestFromRight = -1;
-			for (int x = _grid.Width - 1; x > loc.X; x--)
-				highestFromRight = Math.Max(highestFromRight, _grid[x, loc.Y]);
-			int highestFromTop = -1;
-			for (int y = 0; y < loc.Y; y++)
-				highestFromTop = Math.Max(highestFromTop, _grid[loc.X, y]);
-			int highestFromBottom = -1;
-			for (int y = _grid.Height - 1; y > loc.Y; y--)
-				highestFromBottom = Math.Max(highestFromBottom, _grid[loc.X, y]);
+			foreach(Direction dir in DirectionHelper.AllDirections)
+			{
+				int highest = -1;
+				for(Location loc = target.Displace(dir); _grid.IsInBounds(loc); loc = loc.Displace(dir))
+					highest = Math.Max(highest, _grid[loc]);
 
-			return (highestFromLeft < _grid[loc] || highestFromRight < _grid[loc] || highestFromTop < _grid[loc] || highestFromBottom < _grid[loc]);
+				if (highest < _grid[target])
+					return true;
+			}
+
+			return false;
 		}
 
 		private static void Part2()
@@ -57,41 +55,23 @@ namespace Day08
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 
-		private static int CalculateScenicScore(Location loc)
+		private static int CalculateScenicScore(Location target)
 		{
-			int scenicScoreLeft = 0;
-			for (int x = loc.X - 1; x >= 0; x--)
+			int result = 1;
+			foreach (Direction dir in DirectionHelper.AllDirections)
 			{
-				scenicScoreLeft++;
-				if (_grid[x, loc.Y] >= _grid[loc])
-					break;
+				int scenicScoreInThisDirection = 0;
+				for (Location loc = target.Displace(dir); _grid.IsInBounds(loc); loc = loc.Displace(dir))
+				{
+					scenicScoreInThisDirection++;
+					if (_grid[loc] >= _grid[target])
+						break;
+				}
+
+				result *= scenicScoreInThisDirection;
 			}
 
-			int scenicScoreRight = 0;
-			for (int x = loc.X + 1; x < _grid.Width; x++)
-			{
-				scenicScoreRight++;
-				if (_grid[x, loc.Y] >= _grid[loc])
-					break;
-			}
-
-			int scenicScoreTop = 0;
-			for (int y = loc.Y - 1; y >= 0; y--)
-			{
-				scenicScoreTop++;
-				if (_grid[loc.X, y] >= _grid[loc])
-					break;
-			}
-
-			int scenicScoreBottom = 0;
-			for (int y = loc.Y + 1; y < _grid.Height; y++)
-			{
-				scenicScoreBottom++;
-				if (_grid[loc.X, y] >= _grid[loc])
-					break;
-			}
-
-			return scenicScoreLeft * scenicScoreRight * scenicScoreTop * scenicScoreBottom;
+			return result;
 		}
 	}
 }
