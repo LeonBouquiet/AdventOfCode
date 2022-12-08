@@ -20,6 +20,12 @@ namespace Shared
 			set { _cells[loc.Y, loc.X] = value; }
 		}
 
+		public TData this[int x, int y]
+		{
+			get { return _cells[y, x]; }
+			set { _cells[y, x] = value; }
+		}
+
 		public IEnumerable<Location> Locations
 		{
 			get
