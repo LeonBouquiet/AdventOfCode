@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Shared
 {
+
 	public class Location
 	{
 		public int X { get; private set; }
@@ -45,13 +46,11 @@ namespace Shared
 			}
 		}
 
-		//public bool IsInBounds
-		//{
-		//	get
-		//	{
-		//		return X >= 0 && X < Program.Board.Width && Y >= 0 && Y < Program.Board.Height;
-		//	}
-		//}
+		public Location Displace(Direction dir)
+		{
+			(int, int) displacement = DirectionHelper.DisplacementsByDirection[(int)dir];
+			return new Location(X + displacement.Item1, Y + displacement.Item2);
+		}
 
 		public override string ToString()
 		{
