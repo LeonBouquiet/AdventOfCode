@@ -16,13 +16,13 @@ namespace Day05
 			Part2();
 		}
 
-		private static List<Stack<Char>> Stacks;
+		private static List<Stack<Char>> _stacks = null!;
 
 		private static void Part1()
 		{
 			Process(ApplyMove1);
 
-			string result = string.Join("", Stacks.Select(s => s.Count > 0 ? s.Peek() : ' '));
+			string result = string.Join("", _stacks.Select(s => s.Count > 0 ? s.Peek() : ' '));
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
 
@@ -30,7 +30,7 @@ namespace Day05
 		{
 			Process(ApplyMove2);
 
-			string result = string.Join("", Stacks.Select(s => s.Count > 0 ? s.Peek() : ' '));
+			string result = string.Join("", _stacks.Select(s => s.Count > 0 ? s.Peek() : ' '));
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 
@@ -42,9 +42,9 @@ namespace Day05
 				.ToArray();
 
 			//Create the stacks of crates - index 0 corresponds to column 1.
-			Stacks = new List<Stack<char>>();
+			_stacks = new List<Stack<char>>();
 			for (int index = 0; index < 9; index++)
-				Stacks.Add(new Stack<char>());
+				_stacks.Add(new Stack<char>());
 
 			stackLines
 				.Reverse()
@@ -77,7 +77,7 @@ namespace Day05
 				{
 					char crate = line[charPos];
 					if (crate != ' ')
-						Stacks[index].Push(crate);
+						_stacks[index].Push(crate);
 				}
 			}
 		}
@@ -86,8 +86,8 @@ namespace Day05
 		{
 			for(int i = 0; i < count; i++)
 			{
-				char crate = Stacks[sourceIndex - 1].Pop();
-				Stacks[targetIndex - 1].Push(crate);
+				char crate = _stacks[sourceIndex - 1].Pop();
+				_stacks[targetIndex - 1].Push(crate);
 			}
 		}
 
@@ -95,10 +95,10 @@ namespace Day05
 		{
 			List<char> cratesToMove = new List<char>();
 			for (int i = 0; i < count; i++)
-				cratesToMove.Add(Stacks[sourceIndex - 1].Pop());
+				cratesToMove.Add(_stacks[sourceIndex - 1].Pop());
 
 			foreach(char crate in cratesToMove.AsEnumerable().Reverse())
-				Stacks[targetIndex - 1].Push(crate);
+				_stacks[targetIndex - 1].Push(crate);
 		}
 
 	}
