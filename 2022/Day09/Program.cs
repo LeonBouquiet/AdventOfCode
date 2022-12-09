@@ -16,44 +16,47 @@ namespace Day09
 			{ 'R', Direction.Right }
 		};
 
-		private static Location _head = null!;
-		private static Location _tail = null!;
+
+		private static List<Direction> _instructions = null!;
 		private static Dictionary<Location, Location> _distinctTailLocations = new Dictionary<Location, Location>();
 
 		public static void Main(string[] args)
 		{
+			_instructions = InputReader.Read<Program>()
+				.Select(line => line.Split(' '))
+				.Select(parts => new { Direction = CharToDirectionMap[parts[0][0]], Count = Int32.Parse(parts[1]) })
+				.SelectMany(a => Enumerable.Range(0, a.Count).Select(i => a.Direction))
+				.ToList();
+
 			Part1();
 			Part2();
 		}
 
 		private static void Part1()
 		{
-			_head = new Location(0, 0);
-			_tail = new Location(0, 0);
-			_distinctTailLocations[_tail] = _tail;
+			Location head = new Location(0, 0);
+			Location tail = new Location(0, 0);
 
-			var instructions = InputReader.Read<Program>()
-				.Select(line => line.Split(' '))
-				.Select(parts => new { Direction = CharToDirectionMap[parts[0][0]], Count = Int32.Parse(parts[1]) })
-				.SelectMany(a => Enumerable.Range(0, a.Count).Select(i => a.Direction));
+			_distinctTailLocations.Clear();
+			_distinctTailLocations[tail] = tail;
 
-			foreach (Direction move in instructions)
-				Execute(move);
+			foreach (Direction move in _instructions)
+				Execute(move, ref head, ref tail);
 
 			int result = _distinctTailLocations.Count;
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
 
-		private static void Execute(Direction move)
+		private static void Execute(Direction move, ref Location head, ref Location tail)
 		{
-			_head = _head.Displace(move);
+			head = head.Displace(move);
 
-			if(AreAdjacent(_head, _tail) == false)
+			if(AreAdjacent(head, tail) == false)
 			{
-				int displacementX = Normalize(_head.X - _tail.X);
-				int displacementY = Normalize(_head.Y - _tail.Y);
-				_tail = _tail.Displace(displacementX, displacementY);
-				_distinctTailLocations[_tail] = _tail;
+				int displacementX = Normalize(head.X - tail.X);
+				int displacementY = Normalize(head.Y - tail.Y);
+				tail = tail.Displace(displacementX, displacementY);
+				_distinctTailLocations[tail] = tail;
 			}
 		}
 
