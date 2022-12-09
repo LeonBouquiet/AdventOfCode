@@ -41,13 +41,13 @@ namespace Day09
 			_distinctTailLocations[tail] = tail;
 
 			foreach (Direction move in _instructions)
-				Execute(move, ref head, ref tail);
+				Execute1(move, ref head, ref tail);
 
 			int result = _distinctTailLocations.Count;
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
 
-		private static void Execute(Direction move, ref Location head, ref Location tail)
+		private static void Execute1(Direction move, ref Location head, ref Location tail)
 		{
 			head = head.Displace(move);
 
@@ -57,6 +57,40 @@ namespace Day09
 				int displacementY = Normalize(head.Y - tail.Y);
 				tail = tail.Displace(displacementX, displacementY);
 				_distinctTailLocations[tail] = tail;
+			}
+		}
+
+		private static void Part2()
+		{
+			List<Location> rope = Enumerable.Range(0, 10)
+				.Select(i => new Location(0, 0))
+				.ToList();
+
+			_distinctTailLocations.Clear();
+			_distinctTailLocations[rope.Last()] = rope.Last();
+
+			foreach (Direction move in _instructions)
+				Execute2(move, rope);
+
+			int result = _distinctTailLocations.Count;
+			Console.WriteLine($"The result of part 2 is: {result}");
+		}
+
+		private static void Execute2(Direction move, List<Location> rope)
+		{
+			rope[0] = rope[0].Displace(move);
+
+			for(int tailIndex = 1; tailIndex < rope.Count; tailIndex++)
+			{
+				if (AreAdjacent(rope[tailIndex - 1], rope[tailIndex]))
+					break;
+
+				int displacementX = Normalize(rope[tailIndex - 1].X - rope[tailIndex].X);
+				int displacementY = Normalize(rope[tailIndex - 1].Y - rope[tailIndex].Y);
+				rope[tailIndex] = rope[tailIndex].Displace(displacementX, displacementY);
+
+				if(tailIndex == rope.Count - 1)
+					_distinctTailLocations[rope[tailIndex]] = rope[tailIndex];
 			}
 		}
 
@@ -71,13 +105,6 @@ namespace Day09
 				return Math.Min(value, 1);
 			else
 				return Math.Max(value, -1);
-		}
-
-		private static void Part2()
-		{
-			var result = InputReader.Read<Program>();
-
-			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 
 	}
