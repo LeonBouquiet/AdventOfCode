@@ -52,6 +52,11 @@ namespace Shared
 			return new Location(X + displacement.Item1, Y + displacement.Item2);
 		}
 
+		public Location Displace(int deltaX, int deltaY)
+		{
+			return new Location(X + deltaX, Y + deltaY);
+		}
+
 		public override string ToString()
 		{
 			return $"({X}, {Y})";
