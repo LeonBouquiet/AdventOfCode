@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
+using System.Text;
 using Shared;
 
 namespace Day10
@@ -81,6 +83,24 @@ namespace Day10
 			}
 
 			Console.WriteLine($"The result of part 1 is: {aggregatedSignalStrength}");
+
+			StringBuilder sbResult = new StringBuilder();
+			foreach ((int, int) pair in registerXPerCycle.Skip(1))
+			{
+				cycle = pair.Item1 - 1;
+				int row = cycle / 40;
+				int column = cycle % 40;
+				int spriteColumn = pair.Item2;
+				if(Math.Abs(column - spriteColumn) < 2)
+					sbResult.Append("#");
+				else
+					sbResult.Append(".");
+
+				if(column == 39)
+					sbResult.AppendLine();
+			}
+
+			Console.WriteLine(sbResult.ToString());
 		}
 
 		private static void Part2()
