@@ -40,6 +40,8 @@ namespace Day10
 				.Select(line => Instruction.Parse(line))
 				.ToList();
 
+			List<(int, int)> registerXPerCycle = new List<(int, int)>();
+			registerXPerCycle.Add((1, 1));
 			int x = 1;
 			int cycle = 1;
 			int nextSignalStrengthCycle = 20;
@@ -47,19 +49,35 @@ namespace Day10
 			foreach(Instruction ins in instructions)
 			{
 				if (ins.OpCode == "addx")
+				{
+					registerXPerCycle.Add((cycle, x));
+					registerXPerCycle.Add((cycle + 1, x));
 					x += ins.Operand;
+				}
+				else
+				{
+					registerXPerCycle.Add((cycle, x));
+				}
 
 				int increment = ((ins.OpCode == "noop") ? 1 : 2);
-				if (cycle + increment >= nextSignalStrengthCycle)
+				//if (cycle + increment >= nextSignalStrengthCycle)
+				//{
+				//	int signalStrength = (nextSignalStrengthCycle * x);
+				//	aggregatedSignalStrength += signalStrength;
+				//	nextSignalStrengthCycle += 40;
+				//}
+
+				cycle += increment;
+			}
+
+			foreach((int, int) pair in registerXPerCycle)
+			{
+				if (pair.Item1 == nextSignalStrengthCycle)
 				{
-					int signalStrength = (nextSignalStrengthCycle * x);
+					int signalStrength = (nextSignalStrengthCycle * pair.Item2);
 					aggregatedSignalStrength += signalStrength;
 					nextSignalStrengthCycle += 40;
 				}
-
-				cycle += increment;
-				ins.RegisterX = x;
-				ins.EffectiveFromCycle = cycle;
 			}
 
 			Console.WriteLine($"The result of part 1 is: {aggregatedSignalStrength}");
