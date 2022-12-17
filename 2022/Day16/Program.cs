@@ -79,7 +79,14 @@ namespace Day16
 
 		private void DeterminePriorityAndPotential()
 		{
-			Potential = FlowsPerValve.Max() * (30 - Minute);    //Crude approximation
+			int minutesRemaining = 30 - Minute;
+			Potential = FlowsPerValve
+				.Where(i => i > 0)
+				.OrderByDescending(i => i)
+				.Select(i => i * minutesRemaining--)
+				.Where(i => i > 0)
+				.Sum();
+
 			Priority = -(TotalPressureRelease + (Potential / 2));
 		}
 
