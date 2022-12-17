@@ -46,6 +46,14 @@ namespace Day16
 
 		public int Priority { get; private set; }
 
+		public PathNode(int startingIndex)
+		{
+			Parent = null!;
+			Minute = 0;
+			CurrentIndex = startingIndex;
+			FlowsPerValve = Program.ValveMap.Select(v => v.InitialFlowRate).ToArray();
+		}
+
 		public PathNode(PathNode parent, int moveToIndex)
 		{
 			Parent = parent;
@@ -72,7 +80,7 @@ namespace Day16
 		private void DeterminePriorityAndPotential()
 		{
 			Potential = FlowsPerValve.Max() * (30 - Minute);    //Crude approximation
-			Priority = TotalPressureRelease + (Potential / 2);
+			Priority = -(TotalPressureRelease + (Potential / 2));
 		}
 
 
@@ -96,11 +104,39 @@ namespace Day16
 
 		private static void Part1()
 		{
-			PathNode root = new PathNode(null!, ValveMap.First(v => v.Name == "AA").Index);
+			PathNode root = new PathNode(ValveMap.First(v => v.Name == "AA").Index);
 			PriorityQueue<PathNode, int> queue = new PriorityQueue<PathNode, int>();
-			queue.Enqueue(root);
+			queue.Enqueue(root, root.Priority);
 
-			Console.WriteLine($"The result of part 1 is: {result}");
+			int iteration = 0;
+			PathNode? bestSolution = null;
+			while (queue.Count > 0)
+			{
+				PathNode currentNode = queue.Dequeue();
+				if (currentNode.Minute == 30)
+				{
+					if (bestSolution == null) 
+					{
+						Console.WriteLine($"Found the first solution! {currentNode}");
+						bestSolution = currentNode;
+					}
+					else if(currentNode.TotalPressureRelease > bestSolution.TotalPressureRelease)
+					{
+						Console.WriteLine($"Found a better solution: {currentNode}");
+						bestSolution = currentNode;
+					}
+				}
+				else
+				{
+					var childNodes = GetChildNodes(currentNode);
+					queue.EnqueueRange(childNodes.Select(n => (n, n.Priority)));
+				}
+
+				if(iteration++ % 100000 == 0)
+					Console.WriteLine($"Iteration {iteration}, currently {queue.Count} elements queued.");
+			}
+
+			//Console.WriteLine($"The result of part 1 is: {result}");
 		}
 
 		private static void Part2()
@@ -149,10 +185,15 @@ namespace Day16
 					.ToList();
 			}
 
-			return valveDescriptions
+			List<Valve> valveMap = valveDescriptions
 				.Select(pair => pair.Item1)
 				.OrderBy(v => v.Name)
 				.ToList();
+
+			for (int index = 0; index < valveMap.Count; index++)
+				valveMap[index].Index = index;
+
+			return valveMap;
 		}
 
 		private static (Valve, string[]) ParseValveDescription(string line)
