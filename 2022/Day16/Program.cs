@@ -79,11 +79,11 @@ namespace Day16
 
 		private void DeterminePriorityAndPotential()
 		{
-			int minutesRemaining = 30 - Minute;
+			int index = 0;
 			Potential = FlowsPerValve
 				.Where(i => i > 0)
 				.OrderByDescending(i => i)
-				.Select(i => i * minutesRemaining--)
+				.Select(i => (30 - Minute - (2 * index++)) * i)
 				.Where(i => i > 0)
 				.Sum();
 
@@ -120,6 +120,9 @@ namespace Day16
 			while (queue.Count > 0)
 			{
 				PathNode currentNode = queue.Dequeue();
+				if (bestSolution != null && currentNode.TotalPressureRelease + currentNode.Potential <= bestSolution.TotalPressureRelease)
+					continue;
+
 				if (currentNode.Minute == 30)
 				{
 					if (bestSolution == null) 
