@@ -42,14 +42,39 @@ namespace Day16
 
 		public int TotalPressureRelease { get; set; }
 
-		public PathNode(PathNode parent, int currentIndex)
+		public int Potential { get; private set; }
+
+		public int Priority { get; private set; }
+
+		public PathNode(PathNode parent, int moveToIndex)
 		{
 			Parent = parent;
 			Minute = parent.Minute + 1;
-			CurrentIndex = currentIndex;
+			CurrentIndex = moveToIndex;
 			FlowsPerValve = parent.FlowsPerValve.ToArray();
 			TotalPressureRelease = parent.TotalPressureRelease;
+
+			DeterminePriorityAndPotential();
 		}
+
+		public PathNode(PathNode parent, int moveToIndex, int valveToClose)
+		{
+			Parent = parent;
+			Minute = parent.Minute + 1;
+			CurrentIndex = moveToIndex;
+			FlowsPerValve = parent.FlowsPerValve.ToArray();
+			TotalPressureRelease = parent.TotalPressureRelease + ((30 - Minute) * parent.FlowsPerValve[valveToClose]);
+			FlowsPerValve[valveToClose] = 0;
+
+			DeterminePriorityAndPotential();
+		}
+
+		private void DeterminePriorityAndPotential()
+		{
+			Potential = FlowsPerValve.Max() * (30 - Minute);    //Crude approximation
+			Priority = TotalPressureRelease + (Potential / 2);
+		}
+
 
 		public override string ToString()
 		{
@@ -71,7 +96,9 @@ namespace Day16
 
 		private static void Part1()
 		{
-			var result = InputReader.Read<Program>();
+			PathNode root = new PathNode(null!, ValveMap.First(v => v.Name == "AA").Index);
+			PriorityQueue<PathNode, int> queue = new PriorityQueue<PathNode, int>();
+			queue.Enqueue(root);
 
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
@@ -85,9 +112,11 @@ namespace Day16
 
 		private static List<PathNode> GetChildNodes(PathNode pathNode)
 		{
-			Valve current = ValveMap[pathNode.CurrentIndex];
-			
+			if (pathNode.Minute >= 30)
+				return new List<PathNode>();
+
 			//Start with all possible moves to the neighbouring Valves
+			Valve current = ValveMap[pathNode.CurrentIndex];
 			List<PathNode> result = current.Tunnels
 				.Select(v => new PathNode(pathNode, v.Index))
 				.ToList();
@@ -95,11 +124,7 @@ namespace Day16
 			if (pathNode.FlowsPerValve[current.Index] > 0)
 			{
 				//Valve is still open, close it.
-				PathNode openedValve = new PathNode(pathNode, pathNode.CurrentIndex);
-				openedValve.TotalPressureRelease += ((30 - openedValve.Minute) * pathNode.FlowsPerValve[current.Index]);
-				pathNode.FlowsPerValve[current.Index] = 0;
-
-				result.Add(openedValve);
+				result.Add(new PathNode(pathNode, pathNode.CurrentIndex, current.Index));
 			}
 
 			return result;
