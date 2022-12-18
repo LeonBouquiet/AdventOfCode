@@ -107,8 +107,7 @@ namespace Day16
 			if (other == null)
 				return false;
 
-			if (!(this.CurrentIndex == other.CurrentIndex && this.ElephantIndex == other.ElephantIndex && this.Minute == other.Minute 
-				&& this.TotalPressureRelease == other.TotalPressureRelease && this.Priority == other.Priority && this.Potential == other.Potential))
+			if (!(this.CurrentIndex == other.CurrentIndex && this.ElephantIndex == other.ElephantIndex && this.TotalPressureRelease == other.TotalPressureRelease))
 				return false;
 
 			return Enumerable.SequenceEqual(this.FlowsPerValve, other.FlowsPerValve);
@@ -116,7 +115,7 @@ namespace Day16
 
 		public override int GetHashCode()
 		{
-			return (Minute * 519) ^ TotalPressureRelease ^ Potential; 
+			return (CurrentIndex * 519) ^ (ElephantIndex * 17) ^ TotalPressureRelease; 
 		}
 
 		public override string ToString()
@@ -168,10 +167,19 @@ namespace Day16
 			while (queue.Count > 0)
 			{
 				PathNode currentNode = queue.Dequeue();
-				if (nodesFound.Contains(currentNode))
-					continue;
-
-				nodesFound.Add(currentNode);
+				if (nodesFound.TryGetValue(currentNode, out PathNode? knownNode))
+				{
+					if (currentNode.Minute < knownNode.Minute) {
+						nodesFound.Remove(knownNode);
+						nodesFound.Add(currentNode);
+					}
+					else
+						continue;
+				}
+				else
+				{
+					nodesFound.Add(currentNode);
+				}
 
 				//If the currentNode can't possibly do better than the bestSolution, don't explore it.
 				if (bestSolution != null && currentNode.TotalPressureRelease + currentNode.Potential <= bestSolution.TotalPressureRelease)
