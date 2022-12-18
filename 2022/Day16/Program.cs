@@ -139,6 +139,22 @@ namespace Day16
 			Part2();
 		}
 
+		private static void Part1()
+		{
+			TotalMinutes = 30;
+			PathNode? bestSolution = ExplorePaths(GetChildNodesForPart1);
+
+			Console.WriteLine($"The result of part 1 is: {bestSolution!.TotalPressureRelease}");
+		}
+
+		private static void Part2()
+		{
+			TotalMinutes = 26;
+			PathNode? bestSolution = ExplorePaths(GetChildNodesForPart2);
+
+			Console.WriteLine($"The result of part 2 is: {bestSolution!.TotalPressureRelease}");
+		}
+
 		private static PathNode? ExplorePaths(Func<PathNode, List<PathNode>> getChildNodesFunc)
 		{
 			HashSet<PathNode> nodesFound = new HashSet<PathNode>();
@@ -185,21 +201,6 @@ namespace Day16
 			}
 
 			return bestSolution;
-		}
-
-		private static void Part1()
-		{
-			PathNode? bestSolution = ExplorePaths(GetChildNodesForPart1);
-
-			Console.WriteLine($"The result of part 1 is: {bestSolution!.TotalPressureRelease}");
-		}
-
-		private static void Part2()
-		{
-			TotalMinutes = 26;
-			PathNode? bestSolution = ExplorePaths(GetChildNodesForPart2);
-
-			Console.WriteLine($"The result of part 2 is: {bestSolution!.TotalPressureRelease}");
 		}
 
 		private static List<PathNode> GetChildNodesForPart1(PathNode pathNode)
