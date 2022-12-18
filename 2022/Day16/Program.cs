@@ -186,19 +186,19 @@ namespace Day16
 
 		private static void Part1()
 		{
-			PathNode? bestSolution = ExplorePaths(GetChildNodes);
+			PathNode? bestSolution = ExplorePaths(GetChildNodesForPart1);
 
 			Console.WriteLine($"The result of part 1 is: {bestSolution!.TotalPressureRelease}");
 		}
 
 		private static void Part2()
 		{
-			PathNode? bestSolution = ExplorePaths(GetChildNodes);
+			PathNode? bestSolution = ExplorePaths(GetChildNodesForPart1);
 
 			Console.WriteLine($"The result of part 2 is: {bestSolution!.TotalPressureRelease}");
 		}
 
-		private static List<PathNode> GetChildNodes(PathNode pathNode)
+		private static List<PathNode> GetChildNodesForPart1(PathNode pathNode)
 		{
 			if (pathNode.Minute >= TotalMinutes)
 				return new List<PathNode>();
@@ -227,6 +227,37 @@ namespace Day16
 
 			return result;
 		}
+
+		private static List<PathNode> GetChildNodesForPart2(PathNode pathNode)
+		{
+			if (pathNode.Minute >= TotalMinutes)
+				return new List<PathNode>();
+
+			//Start with all possible moves to the neighbouring Valves
+			Valve current = ValveMap[pathNode.CurrentIndex];
+			List<PathNode> result = new List<PathNode>();
+			foreach (int destIndex in current.Tunnels.Select(v => v.Index))
+			{
+				PathNode child = new PathNode(pathNode);
+				child.CurrentIndex = destIndex;
+				child.DeterminePriorityAndPotential();
+
+				result.Add(child);
+			}
+
+			if (pathNode.FlowsPerValve[current.Index] > 0)
+			{
+				//Valve is still open, close it.
+				PathNode child = new PathNode(pathNode);
+				child.CloseValve();
+				child.DeterminePriorityAndPotential();
+
+				result.Add(child);
+			}
+
+			return result;
+		}
+
 
 		private static readonly Regex ValveDescriptionRegex = new Regex(@"Valve (.+) has flow rate=(\d+); tunnel(?:[s]?) lead(?:[s]?) to valve(?:[s]?) (.+)");
 
