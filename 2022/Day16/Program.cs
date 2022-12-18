@@ -79,6 +79,10 @@ namespace Day16
 
 		private void DeterminePriorityAndPotential()
 		{
+			//In the ideal world, the Valve with the highest pressure is right next to the second highest, etc., and
+			//we can walk one step, close one Valve, walk one step, etc. all Valves from high to low.
+			//Calculate the pressure we would release this way as the Potential; this is an upper bound (i.e. we could
+			//never do better than) on what we could achieve in the actual setting.
 			int index = 0;
 			Potential = FlowsPerValve
 				.Where(i => i > 0)
@@ -87,9 +91,27 @@ namespace Day16
 				.Where(i => i > 0)
 				.Sum();
 
+			//Lower priority is better, the Potential is important but we care more about the TotalPressureRelease.
 			Priority = -(TotalPressureRelease + (Potential / 2));
 		}
 
+		public override bool Equals(object? obj)
+		{
+			PathNode? other = obj as PathNode;
+			if (other == null)
+				return false;
+
+			if (!(this.CurrentIndex == other.CurrentIndex && this.Minute == other.Minute && this.TotalPressureRelease == other.TotalPressureRelease 
+				&& this.Priority == other.Priority && this.Potential == other.Potential))
+				return false;
+
+			return Enumerable.SequenceEqual(this.FlowsPerValve, other.FlowsPerValve);
+		}
+
+		public override int GetHashCode()
+		{
+			return (Minute * 519) ^ TotalPressureRelease ^ Potential; 
+		}
 
 		public override string ToString()
 		{
@@ -111,8 +133,10 @@ namespace Day16
 
 		private static void Part1()
 		{
-			PathNode root = new PathNode(ValveMap.First(v => v.Name == "AA").Index);
+			HashSet<PathNode> nodesFound = new HashSet<PathNode>();
+
 			PriorityQueue<PathNode, int> queue = new PriorityQueue<PathNode, int>();
+			PathNode root = new PathNode(ValveMap.First(v => v.Name == "AA").Index);
 			queue.Enqueue(root, root.Priority);
 
 			int iteration = 0;
@@ -120,6 +144,12 @@ namespace Day16
 			while (queue.Count > 0)
 			{
 				PathNode currentNode = queue.Dequeue();
+				if (nodesFound.Contains(currentNode))
+					continue;
+
+				nodesFound.Add(currentNode);
+
+				//If the currentNode can't possibly do better than the bestSolution, don't explore it.
 				if (bestSolution != null && currentNode.TotalPressureRelease + currentNode.Potential <= bestSolution.TotalPressureRelease)
 					continue;
 
@@ -127,12 +157,12 @@ namespace Day16
 				{
 					if (bestSolution == null) 
 					{
-						Console.WriteLine($"Found the first solution! {currentNode}");
+						Console.WriteLine($"Found the first solution at iteration {iteration}! {currentNode}");
 						bestSolution = currentNode;
 					}
 					else if(currentNode.TotalPressureRelease > bestSolution.TotalPressureRelease)
 					{
-						Console.WriteLine($"Found a better solution: {currentNode}");
+						Console.WriteLine($"Found a better solution at iteration {iteration}: {currentNode}");
 						bestSolution = currentNode;
 					}
 				}
