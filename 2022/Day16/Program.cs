@@ -75,10 +75,13 @@ namespace Day16
 
 		public void ElephantCloseValve()
 		{
-			TotalPressureRelease += ((Program.TotalMinutes - Minute) * FlowsPerValve[ElephantIndex]);
-			FlowsPerValve[ElephantIndex] = 0;
+			//A bit ugly, but it works: don't let the Elephant collect the score if it tries to close the same valve as me.
+			if (FlowsPerValve[ElephantIndex] > 0)
+			{
+				TotalPressureRelease += ((Program.TotalMinutes - Minute) * FlowsPerValve[ElephantIndex]);
+				FlowsPerValve[ElephantIndex] = 0;
+			}
 		}
-
 
 		public void DeterminePriorityAndPotential()
 		{
@@ -193,7 +196,8 @@ namespace Day16
 
 		private static void Part2()
 		{
-			PathNode? bestSolution = ExplorePaths(GetChildNodesForPart1);
+			TotalMinutes = 26;
+			PathNode? bestSolution = ExplorePaths(GetChildNodesForPart2);
 
 			Console.WriteLine($"The result of part 2 is: {bestSolution!.TotalPressureRelease}");
 		}
@@ -233,31 +237,53 @@ namespace Day16
 			if (pathNode.Minute >= TotalMinutes)
 				return new List<PathNode>();
 
-			//Start with all possible moves to the neighbouring Valves
-			Valve current = ValveMap[pathNode.CurrentIndex];
 			List<PathNode> result = new List<PathNode>();
-			foreach (int destIndex in current.Tunnels.Select(v => v.Index))
+			List<Action<PathNode>> myActions = GetMyActions(pathNode);
+			List<Action<PathNode>> elephantActions = GetElephantActions(pathNode);
+
+			foreach(Action<PathNode> myAction in myActions)
 			{
-				PathNode child = new PathNode(pathNode);
-				child.CurrentIndex = destIndex;
-				child.DeterminePriorityAndPotential();
+				foreach(Action<PathNode> elephantAction in elephantActions)
+				{
+					PathNode child = new PathNode(pathNode);
+					myAction(child);
+					elephantAction(child);
+					child.DeterminePriorityAndPotential();
 
-				result.Add(child);
-			}
-
-			if (pathNode.FlowsPerValve[current.Index] > 0)
-			{
-				//Valve is still open, close it.
-				PathNode child = new PathNode(pathNode);
-				child.CloseValve();
-				child.DeterminePriorityAndPotential();
-
-				result.Add(child);
+					result.Add(child);
+				}
 			}
 
 			return result;
 		}
 
+		private static List<Action<PathNode>> GetMyActions(PathNode pathNode)
+		{
+			Valve current = ValveMap[pathNode.CurrentIndex];
+			List<Action<PathNode>> result = current.Tunnels
+				.Select(v => v.Index)
+				.Select(i => new Action<PathNode>(n => n.CurrentIndex = i))
+				.ToList();
+
+			if (pathNode.FlowsPerValve[current.Index] > 0)
+				result.Add(new Action<PathNode>(n => n.CloseValve()));
+
+			return result;
+		}
+
+		private static List<Action<PathNode>> GetElephantActions(PathNode pathNode)
+		{
+			Valve current = ValveMap[pathNode.ElephantIndex];
+			List<Action<PathNode>> result = current.Tunnels
+				.Select(v => v.Index)
+				.Select(i => new Action<PathNode>(n => n.ElephantIndex = i))
+				.ToList();
+
+			if (pathNode.FlowsPerValve[current.Index] > 0)
+				result.Add(new Action<PathNode>(n => n.ElephantCloseValve()));
+
+			return result;
+		}
 
 		private static readonly Regex ValveDescriptionRegex = new Regex(@"Valve (.+) has flow rate=(\d+); tunnel(?:[s]?) lead(?:[s]?) to valve(?:[s]?) (.+)");
 
