@@ -38,6 +38,8 @@ namespace Day16
 
 		public int CurrentIndex { get; set; }
 
+		public int ElephantIndex { get; set; }
+
 		public int[] FlowsPerValve { get; set; }
 
 		public int TotalPressureRelease { get; set; }
@@ -51,33 +53,34 @@ namespace Day16
 			Parent = null!;
 			Minute = 0;
 			CurrentIndex = startingIndex;
+			ElephantIndex = startingIndex;
 			FlowsPerValve = Program.ValveMap.Select(v => v.InitialFlowRate).ToArray();
 		}
 
-		public PathNode(PathNode parent, int moveToIndex)
+		public PathNode(PathNode parent)
 		{
 			Parent = parent;
 			Minute = parent.Minute + 1;
-			CurrentIndex = moveToIndex;
+			CurrentIndex = parent.CurrentIndex;
+			ElephantIndex = parent.ElephantIndex;
 			FlowsPerValve = parent.FlowsPerValve.ToArray();
 			TotalPressureRelease = parent.TotalPressureRelease;
-
-			DeterminePriorityAndPotential();
 		}
 
-		public PathNode(PathNode parent, int moveToIndex, int valveToClose)
+		public void CloseValve()
 		{
-			Parent = parent;
-			Minute = parent.Minute + 1;
-			CurrentIndex = moveToIndex;
-			FlowsPerValve = parent.FlowsPerValve.ToArray();
-			TotalPressureRelease = parent.TotalPressureRelease + ((30 - Minute) * parent.FlowsPerValve[valveToClose]);
-			FlowsPerValve[valveToClose] = 0;
-
-			DeterminePriorityAndPotential();
+			TotalPressureRelease += ((Program.TotalMinutes - Minute) * FlowsPerValve[CurrentIndex]);
+			FlowsPerValve[CurrentIndex] = 0;
 		}
 
-		private void DeterminePriorityAndPotential()
+		public void ElephantCloseValve()
+		{
+			TotalPressureRelease += ((Program.TotalMinutes - Minute) * FlowsPerValve[ElephantIndex]);
+			FlowsPerValve[ElephantIndex] = 0;
+		}
+
+
+		public void DeterminePriorityAndPotential()
 		{
 			//In the ideal world, the Valve with the highest pressure is right next to the second highest, etc., and
 			//we can walk one step, close one Valve, walk one step, etc. all Valves from high to low.
@@ -87,7 +90,7 @@ namespace Day16
 			Potential = FlowsPerValve
 				.Where(i => i > 0)
 				.OrderByDescending(i => i)
-				.Select(i => (30 - Minute - (2 * index++)) * i)
+				.Select(i => (Program.TotalMinutes - Minute - (2 * index++)) * i)
 				.Where(i => i > 0)
 				.Sum();
 
@@ -101,8 +104,8 @@ namespace Day16
 			if (other == null)
 				return false;
 
-			if (!(this.CurrentIndex == other.CurrentIndex && this.Minute == other.Minute && this.TotalPressureRelease == other.TotalPressureRelease 
-				&& this.Priority == other.Priority && this.Potential == other.Potential))
+			if (!(this.CurrentIndex == other.CurrentIndex && this.ElephantIndex == other.ElephantIndex && this.Minute == other.Minute 
+				&& this.TotalPressureRelease == other.TotalPressureRelease && this.Priority == other.Priority && this.Potential == other.Potential))
 				return false;
 
 			return Enumerable.SequenceEqual(this.FlowsPerValve, other.FlowsPerValve);
@@ -123,6 +126,8 @@ namespace Day16
 	{
 		public static List<Valve> ValveMap = null!;
 
+		public static int TotalMinutes = 30;
+
 		public static void Main(string[] args)
 		{
 			ValveMap = ParseValveMap(InputReader.Read<Program>());
@@ -131,7 +136,7 @@ namespace Day16
 			Part2();
 		}
 
-		private static void Part1()
+		private static PathNode? ExplorePaths(Func<PathNode, List<PathNode>> getChildNodesFunc)
 		{
 			HashSet<PathNode> nodesFound = new HashSet<PathNode>();
 
@@ -153,7 +158,7 @@ namespace Day16
 				if (bestSolution != null && currentNode.TotalPressureRelease + currentNode.Potential <= bestSolution.TotalPressureRelease)
 					continue;
 
-				if (currentNode.Minute == 30)
+				if (currentNode.Minute == TotalMinutes)
 				{
 					if (bestSolution == null) 
 					{
@@ -168,7 +173,7 @@ namespace Day16
 				}
 				else
 				{
-					var childNodes = GetChildNodes(currentNode);
+					var childNodes = getChildNodesFunc(currentNode);
 					queue.EnqueueRange(childNodes.Select(n => (n, n.Priority)));
 				}
 
@@ -176,31 +181,48 @@ namespace Day16
 					Console.WriteLine($"Iteration {iteration}, currently {queue.Count} elements queued.");
 			}
 
-			//Console.WriteLine($"The result of part 1 is: {result}");
+			return bestSolution;
+		}
+
+		private static void Part1()
+		{
+			PathNode? bestSolution = ExplorePaths(GetChildNodes);
+
+			Console.WriteLine($"The result of part 1 is: {bestSolution!.TotalPressureRelease}");
 		}
 
 		private static void Part2()
 		{
-			var result = InputReader.Read<Program>();
+			PathNode? bestSolution = ExplorePaths(GetChildNodes);
 
-			Console.WriteLine($"The result of part 2 is: {result}");
+			Console.WriteLine($"The result of part 2 is: {bestSolution!.TotalPressureRelease}");
 		}
 
 		private static List<PathNode> GetChildNodes(PathNode pathNode)
 		{
-			if (pathNode.Minute >= 30)
+			if (pathNode.Minute >= TotalMinutes)
 				return new List<PathNode>();
 
 			//Start with all possible moves to the neighbouring Valves
 			Valve current = ValveMap[pathNode.CurrentIndex];
-			List<PathNode> result = current.Tunnels
-				.Select(v => new PathNode(pathNode, v.Index))
-				.ToList();
+			List<PathNode> result = new List<PathNode>();
+			foreach(int destIndex in current.Tunnels.Select(v => v.Index))
+			{
+				PathNode child = new PathNode(pathNode);
+				child.CurrentIndex = destIndex;
+				child.DeterminePriorityAndPotential();
+
+				result.Add(child);
+			}
 
 			if (pathNode.FlowsPerValve[current.Index] > 0)
 			{
 				//Valve is still open, close it.
-				result.Add(new PathNode(pathNode, pathNode.CurrentIndex, current.Index));
+				PathNode child = new PathNode(pathNode);
+				child.CloseValve();
+				child.DeterminePriorityAndPotential();
+
+				result.Add(child);
 			}
 
 			return result;
