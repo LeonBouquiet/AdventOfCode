@@ -40,6 +40,16 @@ namespace Day19
 			set => Counts[MaterialType.Geode] = value;
 		}
 
+		public bool IsNonNegative
+		{
+			get => Counts.All(c => c >= 0);
+		}
+
+		public Materials(IEnumerable<int> counts)
+		{
+			Counts = counts.ToArray();
+		}
+
 		public Materials(int ore = 0, int clay = 0, int obsidian = 0, int geode = 0)
 		{
 			Ore = ore;
@@ -47,21 +57,52 @@ namespace Day19
 			Obsidian = obsidian;
 			Geode = geode;
 		}
+
+		
+		public static Materials operator* (int i, Materials materials)
+		{
+			return new Materials(materials.Counts.Select(c => i * c));
+		}
+		public static Materials operator +(Materials left, Materials right)
+		{
+			return new Materials(left.Counts
+				.Zip(right.Counts)
+				.Select(a => a.First + a.Second));
+		}
+
+		public static Materials operator -(Materials left, Materials right)
+		{
+			return new Materials(left.Counts
+				.Zip(right.Counts)
+				.Select(a => a.First - a.Second));
+		}
 	}
 
 	public class Blueprint
 	{
 		public int Id { get; set; }
 
-		public Materials OreRobotCost { get; set; }
+		public Materials OreRobotCost {
+			get => CostsPerRobot[MaterialType.Ore]; 
+			set => CostsPerRobot[MaterialType.Ore] = value;
+		}
 
-		public Materials ClayRobotCost { get; set; }
+		public Materials ClayRobotCost {
+			get => CostsPerRobot[MaterialType.Clay];
+			set => CostsPerRobot[MaterialType.Clay] = value;
+		}
 
-		public Materials ObsidianRobotCost { get; set; }
+		public Materials ObsidianRobotCost {
+			get => CostsPerRobot[MaterialType.Obsidian];
+			set => CostsPerRobot[MaterialType.Obsidian] = value;
+		}
 
-		public Materials GeodeRobotCost { get; set; }
+		public Materials GeodeRobotCost {
+			get => CostsPerRobot[MaterialType.Geode];
+			set => CostsPerRobot[MaterialType.Geode] = value;
+		}
 
-		private static readonly Regex CostRegex = new Regex(@"Each (?<name>\S+) robot costs (?<count1>\d+) (\S+)(?: and (?<count2>\d+) (\S+))?");
+		public Materials[] CostsPerRobot { get; set; } = new Materials[4];
 
 		public static Blueprint Parse(string line)
 		{
@@ -88,6 +129,66 @@ namespace Day19
 		}
 	}
 
+	public class GameState
+	{
+		public GameState Parent { get; set; }
+
+		public int Minute { get; set;  }
+
+		public Materials Robots { get; set; }
+
+		public Materials Materials { get; set; }
+
+		public GameState()
+		{
+			Parent = null!;
+			Minute = 0;
+			Robots = new Materials(ore: 1);
+			Materials = new Materials();
+		}
+
+		public GameState(GameState parent)
+		{
+			Parent = parent;
+			Minute = parent.Minute + 1;
+
+			Robots = parent.Robots;
+			Materials = parent.Materials;
+		}
+
+		public List<GameState> GenerateChildStates(Blueprint blueprint)
+		{
+			List<GameState> result = new List<GameState>();
+
+			//There's always the option to not build any Robot and just collect the Materials
+			GameState child = new GameState(this);
+			child.Materials = child.Materials + child.Robots;
+			result.Add(child);
+
+			foreach (int materialType in new[] { MaterialType.Ore, MaterialType.Clay, MaterialType.Obsidian, MaterialType.Geode })
+			{
+				child = new GameState(this);
+
+				//Buy a Robot of this type - We never try to buy more than 1, otherwise we would have bought it sooner.
+				child.Materials = child.Materials - blueprint.CostsPerRobot[materialType];
+				if (child.Materials.IsNonNegative)
+				{
+					//Collect materials from the Robots; every Robot produces one of its Materials.
+					child.Materials = child.Materials + child.Robots;
+
+					//Add the produced robot.
+					child.Robots.Counts[materialType]++;
+					result.Add(child);
+				}
+			}
+
+			return result;
+		}
+
+
+
+	}
+
 	public class Program
 	{
 		public static void Main(string[] args)
@@ -104,6 +205,17 @@ namespace Day19
 
 			int result = 0;
 			Console.WriteLine($"The result of part 1 is: {result}");
+		}
+
+		private static int CalculateMaxGeodes(Blueprint blueprint)
+		{
+			Materials robots = new Materials(ore: 1);
+			Materials materials = new Materials();
+
+			//Have all robots produce their materials
+			materials = materials + robots;
+
+
 		}
 
 		private static void Part2()
