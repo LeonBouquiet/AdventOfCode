@@ -191,12 +191,12 @@ namespace Day19
 			if (other == null)
 				return false;
 
-			return this.Minute == other.Minute && this.Materials.Equals(other.Materials) && this.Robots.Equals(other.Robots);
+			return this.Materials.Equals(other.Materials) && this.Robots.Equals(other.Robots);
 		}
 
 		public override int GetHashCode()
 		{
-			return (Minute * 391) ^ (17 * Materials.GetHashCode()) ^ Robots.GetHashCode();
+			return (17 * Materials.GetHashCode()) ^ Robots.GetHashCode();
 		}
 
 		public List<GameState> GenerateChildStates(Blueprint blueprint)
@@ -266,8 +266,13 @@ namespace Day19
 			while(queue.Count > 0)
 			{
 				GameState current = queue.Dequeue();
-				if (knownStates.Contains(current))
-					continue;
+				if(knownStates.TryGetValue(current, out GameState? knownState))
+				{
+					if (current.Minute >= knownState.Minute)
+						continue;
+
+					knownStates.Remove(knownState);
+				}
 
 				knownStates.Add(current);
 				if(current.Minute < 24)
