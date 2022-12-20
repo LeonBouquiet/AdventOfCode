@@ -227,9 +227,6 @@ namespace Day19
 
 			return result;
 		}
-
-
-
 	}
 
 	public class Program
@@ -246,8 +243,11 @@ namespace Day19
 				.Select(line => Blueprint.Parse(line))
 				.ToList();
 
-			Blueprint first = blueprints.Last();
-			int result = CalculateMaxGeodes(first);
+			//CalculateMaxGeodes(blueprints.First());
+			//int result = 0;
+
+			int result = blueprints.Select(bp => bp.Id * CalculateMaxGeodes(bp))
+				.Sum();
 
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
@@ -262,7 +262,7 @@ namespace Day19
 			PriorityQueue<GameState, int> queue = new PriorityQueue<GameState, int>();
 			queue.Enqueue(root, root.Priority);
 
-			int iterarion = 0;
+			long iteration = 0;
 			while(queue.Count > 0)
 			{
 				GameState current = queue.Dequeue();
@@ -290,10 +290,19 @@ namespace Day19
 					}
 				}
 
-				if(iterarion++ % 100000 == 0)
-					Console.WriteLine($"Iteration {iterarion}, currently {queue.Count} elements queued.");
+				if (iteration++ % 1_000_000 == 0)
+					Console.WriteLine($"Iteration {iteration}, currently {queue.Count} elements queued.");
+
+				if (iteration == 50_000_000)
+				{
+					Console.WriteLine($"Aborted after {iteration} iterations.");
+					break;
+				}
 			}
 
+			Console.WriteLine($">>> Blueprint {blueprint.Id}, max. geodes: {bestSolution!.Materials.Geode}.");
+			//Console.WriteLine("Press enter to continue...");
+			//Console.ReadLine();
 			return bestSolution!.Materials.Geode;
 		}
 
