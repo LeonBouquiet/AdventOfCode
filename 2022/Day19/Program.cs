@@ -165,7 +165,7 @@ namespace Day19
 
 		public int Priority
 		{
-			get => -((24 - Minute) + (Materials.Geode * 8) + (Materials.Obsidian * 3) + (Materials.Clay * 1) + (Materials.Ore * 0));
+			get => -((24 - Minute) + (Materials.Geode * 5) + Robots.Counts.Sum());
 		}
 
 		public GameState()
