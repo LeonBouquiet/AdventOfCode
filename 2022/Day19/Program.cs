@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -81,6 +82,20 @@ namespace Day19
 				.Select(a => a.First - a.Second));
 		}
 
+		public override bool Equals([NotNullWhen(true)] object? obj)
+		{
+			if (!(obj is Materials))
+				return false;
+			return this.Counts
+				.Zip(((Materials)obj).Counts)
+				.All(a => a.First == a.Second);
+		}
+
+		public override int GetHashCode()
+		{
+			return this.Counts.Aggregate(0, (a, i) => 13 * a + i);
+		}
+
 		public override string ToString()
 		{
 			return $"(Ore: {Ore}, Clay: {Clay}, Obsidian: {Obsidian}, Geode: {Geode})";
@@ -150,7 +165,7 @@ namespace Day19
 
 		public int Priority
 		{
-			get => -((24 - Minute) + (Materials.Geode * 5) + Materials.Counts.Sum(c => c));
+			get => -((24 - Minute) + (Materials.Geode * 8) + (Materials.Obsidian * 3) + (Materials.Clay * 1) + (Materials.Ore * 0));
 		}
 
 		public GameState()
@@ -168,6 +183,20 @@ namespace Day19
 
 			Robots = parent.Robots.Clone();
 			Materials = parent.Materials.Clone();
+		}
+
+		public override bool Equals(object? obj)
+		{
+			GameState? other = obj as GameState;
+			if (other == null)
+				return false;
+
+			return this.Minute == other.Minute && this.Materials.Equals(other.Materials) && this.Robots.Equals(other.Robots);
+		}
+
+		public override int GetHashCode()
+		{
+			return (Minute * 391) ^ (17 * Materials.GetHashCode()) ^ Robots.GetHashCode();
 		}
 
 		public List<GameState> GenerateChildStates(Blueprint blueprint)
@@ -217,7 +246,7 @@ namespace Day19
 				.Select(line => Blueprint.Parse(line))
 				.ToList();
 
-			Blueprint first = blueprints.First();
+			Blueprint first = blueprints.Last();
 			int result = CalculateMaxGeodes(first);
 
 			Console.WriteLine($"The result of part 1 is: {result}");
@@ -228,13 +257,19 @@ namespace Day19
 			GameState root = new GameState();
 			GameState? bestSolution = null;
 
+			HashSet<GameState> knownStates = new HashSet<GameState>();
+
 			PriorityQueue<GameState, int> queue = new PriorityQueue<GameState, int>();
 			queue.Enqueue(root, root.Priority);
 
+			int iterarion = 0;
 			while(queue.Count > 0)
 			{
 				GameState current = queue.Dequeue();
+				if (knownStates.Contains(current))
+					continue;
 
+				knownStates.Add(current);
 				if(current.Minute < 24)
 				{
 					List<GameState> childStates = current.GenerateChildStates(blueprint);
@@ -249,6 +284,9 @@ namespace Day19
 						bestSolution = current;
 					}
 				}
+
+				if(iterarion++ % 100000 == 0)
+					Console.WriteLine($"Iteration {iterarion}, currently {queue.Count} elements queued.");
 			}
 
 			return bestSolution!.Materials.Geode;
