@@ -15,7 +15,7 @@ namespace Day19
 		public const int Geode = 3;
 	}
 
-	public record struct Materials
+	public struct Materials
 	{
 		public int[] Counts { get; set; } = new int[4];
 
@@ -58,6 +58,10 @@ namespace Day19
 			Geode = geode;
 		}
 
+		public Materials Clone()
+		{
+			return new Materials(this.Counts);
+		}
 		
 		public static Materials operator* (int i, Materials materials)
 		{
@@ -75,6 +79,11 @@ namespace Day19
 			return new Materials(left.Counts
 				.Zip(right.Counts)
 				.Select(a => a.First - a.Second));
+		}
+
+		public override string ToString()
+		{
+			return $"(Ore: {Ore}, Clay: {Clay}, Obsidian: {Obsidian}, Geode: {Geode})";
 		}
 	}
 
@@ -139,12 +148,17 @@ namespace Day19
 
 		public Materials Materials { get; set; }
 
+		public int Priority
+		{
+			get => -((24 - Minute) + (Materials.Geode * 5) + Materials.Counts.Sum(c => c));
+		}
+
 		public GameState()
 		{
 			Parent = null!;
 			Minute = 0;
 			Robots = new Materials(ore: 1);
-			Materials = new Materials();
+			Materials = new Materials(0, 0, 0, 0);
 		}
 
 		public GameState(GameState parent)
@@ -152,8 +166,8 @@ namespace Day19
 			Parent = parent;
 			Minute = parent.Minute + 1;
 
-			Robots = parent.Robots;
-			Materials = parent.Materials;
+			Robots = parent.Robots.Clone();
+			Materials = parent.Materials.Clone();
 		}
 
 		public List<GameState> GenerateChildStates(Blueprint blueprint)
@@ -203,19 +217,41 @@ namespace Day19
 				.Select(line => Blueprint.Parse(line))
 				.ToList();
 
-			int result = 0;
+			Blueprint first = blueprints.First();
+			int result = CalculateMaxGeodes(first);
+
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
 
 		private static int CalculateMaxGeodes(Blueprint blueprint)
 		{
-			Materials robots = new Materials(ore: 1);
-			Materials materials = new Materials();
+			GameState root = new GameState();
+			GameState? bestSolution = null;
 
-			//Have all robots produce their materials
-			materials = materials + robots;
+			PriorityQueue<GameState, int> queue = new PriorityQueue<GameState, int>();
+			queue.Enqueue(root, root.Priority);
 
+			while(queue.Count > 0)
+			{
+				GameState current = queue.Dequeue();
 
+				if(current.Minute < 24)
+				{
+					List<GameState> childStates = current.GenerateChildStates(blueprint);
+					queue.EnqueueRange(childStates.Select(gs => (gs, gs.Priority)));
+				}
+				else
+				{
+					//The best solution is always after 24 minutes.
+					if (bestSolution == null || current.Materials.Geode > bestSolution.Materials.Geode)
+					{
+						Console.WriteLine($"Found a new best solution: Materials: {current.Materials}, Robots: {current.Robots}.");
+						bestSolution = current;
+					}
+				}
+			}
+
+			return bestSolution!.Materials.Geode;
 		}
 
 		private static void Part2()
