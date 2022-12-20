@@ -165,7 +165,7 @@ namespace Day19
 
 		public int Priority
 		{
-			get => -((24 - Minute) + (Materials.Geode * 5) + Robots.Counts.Sum());
+			get => -((32 - Minute) + (Materials.Geode * 5) + Robots.Counts.Skip(1).Sum());
 		}
 
 		public GameState()
@@ -233,7 +233,7 @@ namespace Day19
 	{
 		public static void Main(string[] args)
 		{
-			Part1();
+			//Part1();
 			Part2();
 		}
 
@@ -243,16 +243,27 @@ namespace Day19
 				.Select(line => Blueprint.Parse(line))
 				.ToList();
 
-			//CalculateMaxGeodes(blueprints.First());
-			//int result = 0;
-
-			int result = blueprints.Select(bp => bp.Id * CalculateMaxGeodes(bp))
+			int result = blueprints.Select(bp => bp.Id * CalculateMaxGeodes(bp, 24))
 				.Sum();
 
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
 
-		private static int CalculateMaxGeodes(Blueprint blueprint)
+		private static void Part2()
+		{
+			List<Blueprint> blueprints = InputReader.Read<Program>()
+				.Take(3)
+				.Select(line => Blueprint.Parse(line))
+				.ToList();
+
+			int[] results = blueprints.Select(bp => CalculateMaxGeodes(bp, 32))
+				.ToArray();
+
+			int result = results[0] * results[1] * results[2];
+			Console.WriteLine($"The result of part 2 is: {result}");
+		}
+
+		private static int CalculateMaxGeodes(Blueprint blueprint, int maxMinutes)
 		{
 			GameState root = new GameState();
 			GameState? bestSolution = null;
@@ -275,7 +286,7 @@ namespace Day19
 				}
 
 				knownStates.Add(current);
-				if(current.Minute < 24)
+				if(current.Minute < maxMinutes)
 				{
 					List<GameState> childStates = current.GenerateChildStates(blueprint);
 					queue.EnqueueRange(childStates.Select(gs => (gs, gs.Priority)));
@@ -293,7 +304,7 @@ namespace Day19
 				if (iteration++ % 1_000_000 == 0)
 					Console.WriteLine($"Iteration {iteration}, currently {queue.Count} elements queued.");
 
-				if (iteration == 50_000_000)
+				if (iteration == 20_000_000)
 				{
 					Console.WriteLine($"Aborted after {iteration} iterations.");
 					break;
@@ -304,13 +315,6 @@ namespace Day19
 			//Console.WriteLine("Press enter to continue...");
 			//Console.ReadLine();
 			return bestSolution!.Materials.Geode;
-		}
-
-		private static void Part2()
-		{
-			var result = InputReader.Read<Program>();
-
-			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 	}
 }
