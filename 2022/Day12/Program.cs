@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Shared;
@@ -41,6 +42,8 @@ namespace Day12
 
 		public static void Main(string[] args)
 		{
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
 			Heightmap = new Grid<int>(InputReader.Read<Program>()
 				.Select(line => line
 					.Select(c => (c - 'a')))
@@ -54,12 +57,15 @@ namespace Day12
 
 			Part1();
 			Part2();
+
+			stopwatch.Stop();
+			Console.WriteLine($"Elapsed time: {stopwatch.ElapsedMilliseconds}ms ({stopwatch.ElapsedTicks} ticks).");
 		}
 
 		private static void Part1()
 		{
-			PathNode result = FindShortestPath(Start);
-			Console.WriteLine($"The result of part 1 is: {result.Steps}");
+			PathNode? result = FindShortestPath(Start);
+			Console.WriteLine($"The result of part 1 is: {result!.Steps}");
 		}
 
 		private static void Part2()
@@ -68,18 +74,27 @@ namespace Day12
 				.Where(loc => Heightmap[loc] == 0)
 				.ToList();
 
+			int iteration = 0;
 			int shortestPathLength = Int32.MaxValue;
 			foreach(Location start in lowestLocations)
 			{
+				iteration++;
+
 				PathNode? path = FindShortestPath(start);
-				if(path != null)
-					shortestPathLength = Math.Min(path.Steps, shortestPathLength);
+				if (path == null)
+					continue;
+
+				if(path.Steps < shortestPathLength)
+				{
+					shortestPathLength = path.Steps;
+					Console.WriteLine($"Iteration {iteration}: Found a new shortest path of length {shortestPathLength}.");
+				}
 			}
 
 			Console.WriteLine($"The result of part 2 is: {shortestPathLength}");
 		}
 
-		private static PathNode FindShortestPath(Location start)
+		private static PathNode? FindShortestPath(Location start)
 		{
 			HashSet<Location> visited = new HashSet<Location>();
 			PriorityQueue<PathNode, int> explore = new PriorityQueue<PathNode, int>();
@@ -109,7 +124,7 @@ namespace Day12
 				}
 			}
 
-			return null!;
+			return null;
 		}
 
 
