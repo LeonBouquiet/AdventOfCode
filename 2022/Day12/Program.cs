@@ -52,16 +52,38 @@ namespace Day12
 			End = Heightmap.Locations.Where(loc => Heightmap[loc] == ('E' - 'a')).First();
 			Heightmap[End] = 'z' - 'a';
 
-			PathNode path = Part1();
-			Console.WriteLine($"The result of part 1 is: {path.Steps}");
+			Part1();
 			Part2();
 		}
 
-		private static PathNode Part1()
+		private static void Part1()
+		{
+			PathNode result = FindShortestPath(Start);
+			Console.WriteLine($"The result of part 1 is: {result.Steps}");
+		}
+
+		private static void Part2()
+		{
+			List<Location> lowestLocations = Heightmap.Locations
+				.Where(loc => Heightmap[loc] == 0)
+				.ToList();
+
+			int shortestPathLength = Int32.MaxValue;
+			foreach(Location start in lowestLocations)
+			{
+				PathNode? path = FindShortestPath(start);
+				if(path != null)
+					shortestPathLength = Math.Min(path.Steps, shortestPathLength);
+			}
+
+			Console.WriteLine($"The result of part 2 is: {shortestPathLength}");
+		}
+
+		private static PathNode FindShortestPath(Location start)
 		{
 			HashSet<Location> visited = new HashSet<Location>();
 			PriorityQueue<PathNode, int> explore = new PriorityQueue<PathNode, int>();
-			explore.Enqueue(new PathNode(Start), 0);
+			explore.Enqueue(new PathNode(start), 0);
 
 			while(explore.Count > 0)
 			{
@@ -90,12 +112,6 @@ namespace Day12
 			return null!;
 		}
 
-		private static void Part2()
-		{
-			var result = Heightmap.Locations.Count(loc => Heightmap[loc] == 0);
-
-			Console.WriteLine($"The result of part 2 is: {result}");
-		}
 
 	}
 }
