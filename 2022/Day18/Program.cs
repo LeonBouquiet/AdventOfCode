@@ -41,33 +41,63 @@ namespace Day18
 	{
 		public static void Main(string[] args)
 		{
-			Part1();
-			Part2();
-		}
-
-		private static void Part1()
-		{
-			var points = InputReader.Read<Program>()
+			List<Point3D> points = InputReader.Read<Program>()
 				.Select(line => line.Split(',')
 					.Select(s => Int32.Parse(s))
 					.ToArray())
 				.Select(arr => new Point3D(arr[0], arr[1], arr[2]))
 				.ToList();
 
-			HashSet<Point3D> allPoints = new HashSet<Point3D>(points);
+			Part1(points);
+			Part2(points);
+		}
+
+		private static void Part1(List<Point3D> points)
+		{
+			HashSet<Point3D> droplet = new HashSet<Point3D>(points);
 			
 			int openSides = 0;
-			foreach(Point3D point in allPoints)
-				openSides += (6 - point.Neighbours.Count(nb => allPoints.Contains(nb)));
+			foreach(Point3D point in droplet)
+				openSides += (6 - point.Neighbours.Count(nb => droplet.Contains(nb)));
 
 			Console.WriteLine($"The result of part 1 is: {openSides}");
 		}
 
-		private static void Part2()
+		private static void Part2(List<Point3D> points)
 		{
-			var result = InputReader.Read<Program>();
+			HashSet<Point3D> droplet = new HashSet<Point3D>(points);
 
-			Console.WriteLine($"The result of part 2 is: {result}");
+			int maxX = points.Max(p => p.X) + 1;
+			int maxY = points.Max(p => p.Y) + 1;
+			int maxZ = points.Max(p => p.Z) + 1;
+
+			HashSet<Point3D> visited = new HashSet<Point3D>();
+			int outsideCount = 0;
+
+			//Do a floodfill from outside the droplet, each time we hit a part of the droplet, we've found an outside face. 
+			Queue<Point3D> explore = new Queue<Point3D>();
+			explore.Enqueue(new Point3D(-1, -1, -1));
+			while(explore.Count > 0)
+			{
+				Point3D p = explore.Dequeue();
+				if (visited.Contains(p) == false)
+				{
+					visited.Add(p);
+
+					foreach (Point3D nb in p.Neighbours)
+					{
+						if (nb.X < -1 || nb.X > maxX || nb.Y < -1 || nb.Y > maxY || nb.Z < -1 || nb.Z > maxZ || visited.Contains(nb))
+							continue;
+
+						if (droplet.Contains(nb))
+							outsideCount++;
+						else
+							explore.Enqueue(nb);
+					}
+				}
+			}
+
+			Console.WriteLine($"The result of part 2 is: {outsideCount}");
 		}
 
 	}
