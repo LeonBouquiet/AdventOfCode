@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Shared;
@@ -41,6 +42,8 @@ namespace Day18
 	{
 		public static void Main(string[] args)
 		{
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
 			List<Point3D> points = InputReader.Read<Program>()
 				.Select(line => line.Split(',')
 					.Select(s => Int32.Parse(s))
@@ -50,6 +53,9 @@ namespace Day18
 
 			Part1(points);
 			Part2(points);
+
+			stopwatch.Stop();
+			Console.WriteLine($"Elapsed time: {stopwatch.ElapsedMilliseconds}ms ({stopwatch.ElapsedTicks} ticks).");
 		}
 
 		private static void Part1(List<Point3D> points)
