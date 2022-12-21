@@ -6,35 +6,93 @@ using Shared;
 
 namespace Day12
 {
+	public class PathNode
+	{
+		public PathNode Parent { get; set; }
+
+		public Location Location { get; set; }
+
+		public int Steps { get; set; }
+
+		public PathNode(Location loc)
+		{
+			Parent = null!;
+			Location = loc;
+			Steps = 0;
+		}
+
+		public PathNode(PathNode parent, Location location)
+		{
+			Parent = parent;
+			Location = location;
+			Steps = parent.Steps + 1;
+		}
+
+		public override string ToString() => $"{Location}";
+	}
+
 	public class Program
 	{
+		private static Grid<int> Heightmap = null!;
+
+		private static Location Start;
+
+		private static Location End;
+
 		public static void Main(string[] args)
 		{
-			Grid<int> heightmap = new Grid<int>(InputReader.Read<Program>()
+			Heightmap = new Grid<int>(InputReader.Read<Program>()
 				.Select(line => line
 					.Select(c => (c - 'a')))
 				.ToList());
-			heightmap.FormatCell = (i => "" + (char)('a' + i));
+			Heightmap.FormatCell = (i => "" + (char)('a' + i));
 
-			Location start = heightmap.Locations.Where(loc => heightmap[loc] == ('S' - 'a')).First();
-			heightmap[start] = 0;
-			Location end = heightmap.Locations.Where(loc => heightmap[loc] == ('E' - 'a')).First();
-			heightmap[end] = 'z' - 'a';
+			Start = Heightmap.Locations.Where(loc => Heightmap[loc] == ('S' - 'a')).First();
+			Heightmap[Start] = 0;
+			End = Heightmap.Locations.Where(loc => Heightmap[loc] == ('E' - 'a')).First();
+			Heightmap[End] = 'z' - 'a';
 
-			Part1();
+			PathNode path = Part1();
+			Console.WriteLine($"The result of part 1 is: {path.Steps}");
 			Part2();
 		}
 
-		private static void Part1()
+		private static PathNode Part1()
 		{
-			var result = InputReader.Read<Program>();
+			HashSet<Location> visited = new HashSet<Location>();
+			PriorityQueue<PathNode, int> explore = new PriorityQueue<PathNode, int>();
+			explore.Enqueue(new PathNode(Start), 0);
 
-			Console.WriteLine($"The result of part 1 is: {result}");
+			while(explore.Count > 0)
+			{
+				PathNode current = explore.Dequeue();
+				if (visited.Contains(current.Location))
+					continue;
+
+				visited.Add(current.Location);
+				foreach (Location nb in current.Location.CoreNeighbours)
+				{
+					if (!Heightmap.IsInBounds(nb) || visited.Contains(nb))
+						continue;
+
+					if (Heightmap[nb] <= Heightmap[current.Location] + 1) 
+					{
+						PathNode neighbouringNode = new PathNode(current, nb);
+						int dist = nb.ManhattanDistanceTo(End);
+						if (dist > 0)
+							explore.Enqueue(neighbouringNode, current.Steps + 1 + dist);
+						else
+							return neighbouringNode;
+					}
+				}
+			}
+
+			return null!;
 		}
 
 		private static void Part2()
 		{
-			var result = InputReader.Read<Program>();
+			var result = Heightmap.Locations.Count(loc => Heightmap[loc] == 0);
 
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}

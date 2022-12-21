@@ -32,6 +32,20 @@ namespace Shared
 			return Y * 1137 + X;
 		}
 
+		private static (int, int)[] CoreNeighboursDisplacements = new (int, int)[]
+		{
+			( 0, -1), (-1,  0), ( 0,  1), ( 1,  0),
+		};
+
+
+		public IEnumerable<Location> CoreNeighbours
+		{
+			get
+			{
+				return CoreNeighboursDisplacements.Select(disp => new Location(this.X + disp.Item1, this.Y + disp.Item2));
+			}
+		}
+
 		private static (int, int)[] AllNeighboursDisplacements = new (int, int)[]
 		{
 			( 0, -1), (-1, -1), (-1,  0), (-1,  1), ( 0,  1), ( 1,  1), ( 1,  0), ( 1, -1),
@@ -55,6 +69,11 @@ namespace Shared
 		public Location Displace(int deltaX, int deltaY)
 		{
 			return new Location(X + deltaX, Y + deltaY);
+		}
+
+		public int ManhattanDistanceTo(Location other)
+		{
+			return Math.Abs(X - other.X) + Math.Abs(Y - other.Y);
 		}
 
 		public override string ToString()
