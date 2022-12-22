@@ -37,22 +37,13 @@ namespace Day15
 	{
 		public static void Main(string[] args)
 		{
-			var diamonds = InputReader.Read<Program>()
+			List<Diamond> diamonds = InputReader.Read<Program>()
 				.Select(line => ParseBeaconSensorPair(line))
 				.Select(pair => new Diamond(pair.Item1, pair.Item1.ManhattanDistanceTo(pair.Item2)))
 				.ToList();
 
-			var result = diamonds
-				.Select(d => d.GetCoverageAt(2000000))
-				.Where(pair => pair != null)
-				.SelectMany(pair => Enumerable.Range(pair.Value.Item1, pair.Value.Item2 - pair.Value.Item1))
-				.Distinct()
-				.Count();
-
-			Console.WriteLine($"The result of part 1 is: {result}");
-
-			Part1();
-			Part2();
+			Part1(diamonds);
+			Part2(diamonds);
 		}
 
 		private static (Location, Location) ParseBeaconSensorPair(string line)
@@ -66,14 +57,19 @@ namespace Day15
 			return new(new Location(numbers[0], numbers[1]), new Location(numbers[2], numbers[3]));
 		}
 
-		private static void Part1()
+		private static void Part1(List<Diamond> diamonds)
 		{
-			var result = InputReader.Read<Program>();
+			var result = diamonds
+				.Select(d => d.GetCoverageAt(2000000))
+				.Where(pair => pair != null)
+				.SelectMany(pair => Enumerable.Range(pair.Value.Item1, pair.Value.Item2 - pair.Value.Item1))
+				.Distinct()
+				.Count();
 
 			Console.WriteLine($"The result of part 1 is: {result}");
 		}
 
-		private static void Part2()
+		private static void Part2(List<Diamond> diamonds)
 		{
 			var result = InputReader.Read<Program>();
 
