@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Shared;
@@ -91,6 +92,8 @@ namespace Day15
 	{
 		public static void Main(string[] args)
 		{
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
 			List<Diamond> diamonds = InputReader.Read<Program>()
 				.Select(line => ParseBeaconSensorPair(line))
 				.Select(pair => new Diamond(pair.Item1, pair.Item1.ManhattanDistanceTo(pair.Item2)))
@@ -98,6 +101,9 @@ namespace Day15
 
 			Part1(diamonds);
 			Part2(diamonds);
+
+			stopwatch.Stop();
+			Console.WriteLine($"Elapsed time: {stopwatch.ElapsedMilliseconds}ms ({stopwatch.ElapsedTicks} ticks).");
 		}
 
 		private static (Location, Location) ParseBeaconSensorPair(string line)
@@ -144,6 +150,8 @@ namespace Day15
 					int xGap = merged[0].End + 1;
 					long result = (long)xGap * 4000000 + y;
 					Console.WriteLine($"The result of part 2 is: {result}");
+
+					return;
 				}
 			}
 		}
