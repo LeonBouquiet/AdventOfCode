@@ -52,7 +52,7 @@ namespace Day22
 
 		private static List<(int, char)> ParseInstructions(string line)
 		{
-			List<(int, char)> result = line.PartitionIntoRangesBy(c => (c == 'L' || c == 'R'), includeDelimiters: true)
+			List<(int, char)> result = line.PartitionIntoRangesBy(c => (c == 'L' || c == 'R' || c == 'x'), includeDelimiters: true)
 				.Select(chars => (Int32.Parse(new string(chars.Take(chars.Count - 1).ToArray())), chars.Last()))
 				.ToList();
 
@@ -106,6 +106,9 @@ namespace Day22
 
 		private static Direction Rotate(Direction current, char rotation)
 		{
+			if (rotation == 'x')
+				return current;
+
 			int index = Array.IndexOf(CircularDirections, current);
 			int offset = (rotation == 'L') ? -1 : 1;
 			return CircularDirections[(index + offset + 4) % 4];
