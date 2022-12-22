@@ -60,6 +60,7 @@ namespace Day15
 		{
 			List<NumberRange> merged = numberRanges.ToList();
 
+			//Not sure if O(n^2) is needed here, but it works well as long as the counts are low...
 			for (int targetIndex = 0; targetIndex < merged.Count; targetIndex++)
 			{
 				for (int index = 0; index < merged.Count; index++)
@@ -124,17 +125,27 @@ namespace Day15
 
 		private static void Part2(List<Diamond> diamonds)
 		{
-			List<NumberRange> numberRanges = diamonds
-				.Select(d => d.GetCoverageAt(2000000))
-				.Where(pair => pair != null)
-				.Select(pair => new NumberRange(pair.Value.Item1, pair.Value.Item2))
-				.OrderBy(rng => rng.Start)
-				.ToList();
+			for (int y = 0; y < 4000000; y++)
+			{
+				List<NumberRange> numberRanges = diamonds
+					.Select(d => d.GetCoverageAt(y))
+					.Where(pair => pair != null)
+					.Select(pair => new NumberRange(pair.Value.Item1, pair.Value.Item2))
+					.OrderBy(rng => rng.Start)
+					.ToList();
 
-			List<NumberRange> merged = NumberRange.UnionAll(numberRanges);
+				List<NumberRange> merged = NumberRange.UnionAll(numberRanges);
+				if(merged.Count > 1)
+				{
+					merged = merged
+						.Select(rng => rng.Intersection(new NumberRange(0, 4000000)))
+						.ToList();
 
-			int result = merged[0].End - merged[0].Start;
-			Console.WriteLine($"The result of part 2 is: {result}");
+					int xGap = merged[0].End + 1;
+					long result = (long)xGap * 4000000 + y;
+					Console.WriteLine($"The result of part 2 is: {result}");
+				}
+			}
 		}
 
 	}
