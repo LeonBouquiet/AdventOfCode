@@ -33,6 +33,59 @@ namespace Day15
 		}
 	}
 
+	public class NumberRange
+	{
+		public int Start { get; set; }
+		public int End { get; set; }        //Inclusive
+
+		public NumberRange(int start, int end)
+		{
+			Start = start;
+			End = end;
+		}
+
+		public override string ToString() => $"[{Start}, {End}]";
+
+		public bool Overlaps(NumberRange other)
+		{
+			return !(this.End < other.Start || other.End < this.Start);
+		}
+
+		public NumberRange Union(NumberRange other)
+		{
+			return new NumberRange(Math.Min(this.Start, other.Start), Math.Max(this.End, other.End));
+		}
+
+		public static List<NumberRange> UnionAll(IEnumerable<NumberRange> numberRanges)
+		{
+			List<NumberRange> merged = numberRanges.ToList();
+
+			for (int targetIndex = 0; targetIndex < merged.Count; targetIndex++)
+			{
+				for (int index = 0; index < merged.Count; index++)
+				{
+					if (index != targetIndex && merged[index].Overlaps(merged[targetIndex]))
+					{
+						merged[index] = merged[index].Union(merged[targetIndex]);
+						merged.RemoveAt(targetIndex);
+
+						//Continue with this combined NumberRange, don't advance
+						index--;
+						targetIndex = (targetIndex > 0) ? targetIndex - 1: targetIndex;
+					}
+				}
+			}
+
+			return merged;
+		}
+
+		public NumberRange Intersection(NumberRange other)
+		{
+			return new NumberRange(Math.Max(this.Start, other.Start), Math.Min(this.End, other.End));
+		}
+
+	}
+
 	public class Program
 	{
 		public static void Main(string[] args)
@@ -71,8 +124,16 @@ namespace Day15
 
 		private static void Part2(List<Diamond> diamonds)
 		{
-			var result = InputReader.Read<Program>();
+			List<NumberRange> numberRanges = diamonds
+				.Select(d => d.GetCoverageAt(2000000))
+				.Where(pair => pair != null)
+				.Select(pair => new NumberRange(pair.Value.Item1, pair.Value.Item2))
+				.OrderBy(rng => rng.Start)
+				.ToList();
 
+			List<NumberRange> merged = NumberRange.UnionAll(numberRanges);
+
+			int result = merged[0].End - merged[0].Start;
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 
