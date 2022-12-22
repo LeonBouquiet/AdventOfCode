@@ -37,6 +37,7 @@ namespace Shared
 				}
 			}
 		}
+
 		public Func<TData, string> FormatCell { get; set; } = (c => (c != null) ? c.ToString()! : " ");
 
 		public string Display
@@ -70,6 +71,19 @@ namespace Shared
 				}
 			}
 		}
+
+		public IEnumerable<Location> GetLocationsInRow(int y)
+		{
+			for (int x = 0; x < Width; x++)
+				yield return new Location(x, y);
+		}
+
+		public IEnumerable<Location> GetLocationsInColumn(int x)
+		{
+			for (int y = 0; y < Height; y++)
+				yield return new Location(x, y);
+		}
+
 
 		public bool IsInBounds(Location loc)
 		{

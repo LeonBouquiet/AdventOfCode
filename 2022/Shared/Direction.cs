@@ -8,10 +8,10 @@ namespace Shared
 {
 	public enum Direction
 	{
-		Left   = 1,
-		Right  = 2,
-		Up     = 3,
-		Down   = 4
+		Left   = 0,
+		Right  = 1,
+		Up     = 2,
+		Down   = 3
 	}
 
 	public static class DirectionHelper
@@ -23,7 +23,7 @@ namespace Shared
 
 		public static readonly (int, int)[] DisplacementsByDirection = new (int, int)[]
 		{
-			(0, 0), (1, 0), (-1, 0), (0, -1), (0, 1)
+			(-1, 0), (1, 0), (0, -1), (0, 1)
 		};
 
 		public static Direction Opposite(Direction dir)
