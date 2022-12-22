@@ -18,6 +18,15 @@ namespace Day15
 			Radius = radius;
 		}
 
+		public (int, int)? GetCoverageAt(int y)
+		{
+			if (Center.Y - Radius > y || Center.Y + Radius < y)
+				return null;
+
+			var widthAtY = Radius - Math.Abs(y - Center.Y);
+			return new(Center.X - widthAtY, Center.X + widthAtY);
+		}
+
 		public override string ToString()
 		{
 			return $"Center at {Center}, radius {Radius}";
@@ -28,10 +37,19 @@ namespace Day15
 	{
 		public static void Main(string[] args)
 		{
-			var result = InputReader.Read<Program>()
+			var diamonds = InputReader.Read<Program>()
 				.Select(line => ParseBeaconSensorPair(line))
 				.Select(pair => new Diamond(pair.Item1, pair.Item1.ManhattanDistanceTo(pair.Item2)))
 				.ToList();
+
+			var result = diamonds
+				.Select(d => d.GetCoverageAt(2000000))
+				.Where(pair => pair != null)
+				.SelectMany(pair => Enumerable.Range(pair.Value.Item1, pair.Value.Item2 - pair.Value.Item1))
+				.Distinct()
+				.Count();
+
+			Console.WriteLine($"The result of part 1 is: {result}");
 
 			Part1();
 			Part2();
