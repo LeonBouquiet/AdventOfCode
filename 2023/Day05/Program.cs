@@ -78,7 +78,34 @@ namespace Day05
 
 		private static void Part2()
 		{
-			var result = InputReader.Read<Program>();
+			List<string>[] sections = InputReader.Read<Program>().Concat(new string[] { "" }) //Add an empty line so last section is terminated as well.
+				.PartitionIntoRangesBy(line => string.IsNullOrWhiteSpace(line), includeDelimiters: false)
+				.ToArray();
+
+			List<Tuple<long, long>> seedRanges = sections[0].First().Substring(7)
+				.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+				.Select(s => Int64.Parse(s))
+				.PartitionIntoRangesOfN(n: 2)
+				.Select(list => new Tuple<long, long>(list[0], list[1]))
+				.ToList();
+
+			List<Map> maps = ParseMaps(sections.Skip(1));
+
+			List<Tuple<long, long>> seedToLocationPairs = new List<Tuple<long, long>>();
+			foreach (Tuple<long, long> seedRange in seedRanges)
+			{
+				Console.WriteLine($"Processing seed range {seedRange.Item1} ({seedRange.Item2} items)...");
+				for (long offset = 0; offset < seedRange.Item2; offset++)
+				{
+					long value = seedRange.Item1 + offset;
+					foreach (Map map in maps)
+						value = map.Resolve(value);
+
+					seedToLocationPairs.Add(new Tuple<long, long>(seedRange.Item1 + offset, value));
+				}
+			}
+
+			var result = seedToLocationPairs.Min(pair => pair.Item2);
 
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
