@@ -1,24 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Shared;
-using static System.Collections.Specialized.BitVector32;
 
 namespace Day05
 {
+	public class RangeEntry
+	{
+		public long DestStart { get; set; }
+		public long SourceStart { get; set; }
+		public long Count { get; set; }
+
+		public bool Includes(long source)
+		{
+			return (SourceStart <= source) && (source < SourceStart + Count);
+		}
+	}
+
 	public class Map
 	{
-		public string Name { get; set; }
-		public Dictionary<long, long> SourceToDest { get; set; }
+		public string Name { get; private set; }
+
+		public List<RangeEntry> RangeEntries { get; private set; }
+
+		public Map(string name, IEnumerable<RangeEntry> rangeEntries)
+		{
+			Name = name;
+			RangeEntries = rangeEntries.OrderBy(ent => ent.SourceStart).ToList();
+		}
 
 		public long Resolve(long source)
 		{
-			long result;
-			if (SourceToDest.TryGetValue(source, out result))
-				return result;
-			else
-				return source;	//Not defined, map to source value.
+			foreach(var entry in RangeEntries)
+			{
+				if (entry.Includes(source))
+					return (source - entry.SourceStart) + entry.DestStart;
+			}
+
+			return source; //Not defined, map to source.
 		}
 	}
 
@@ -73,7 +92,7 @@ namespace Day05
 				string name = section.First().Replace(" map:", "");
 				Console.WriteLine($"Constructing map {name}...");
 
-				Dictionary<long, long> map = new Dictionary<long, long>();
+				List<RangeEntry> rangeEntries = new List<RangeEntry>();
 				foreach (string line in section.Skip(1))
 				{
 					long[] values = line
@@ -81,16 +100,10 @@ namespace Day05
 						.Select(s => Int64.Parse(s))
 						.ToArray();
 
-					long destStart = values[0];
-					long sourceStart = values[1];
-					long count = values[2];
-
-					//Expand the values while filling the map
-					for (long index = 0; index < count; index++)
-						map[sourceStart + index] = destStart + index;
+					rangeEntries.Add(new RangeEntry() { DestStart = values[0], SourceStart = values[1], Count = values[2] });
 				}
 
-				result.Add(new Map() { Name = name, SourceToDest = map });
+				result.Add(new Map(name, rangeEntries));
 			}
 
 			return result;
