@@ -95,14 +95,19 @@ namespace Day05
 			foreach (Tuple<long, long> seedRange in seedRanges)
 			{
 				Console.WriteLine($"Processing seed range {seedRange.Item1} ({seedRange.Item2} items)...");
+
+				List<Tuple<long, long>> localPairs = new List<Tuple<long, long>>();
 				for (long offset = 0; offset < seedRange.Item2; offset++)
 				{
+
 					long value = seedRange.Item1 + offset;
 					foreach (Map map in maps)
 						value = map.Resolve(value);
 
-					seedToLocationPairs.Add(new Tuple<long, long>(seedRange.Item1 + offset, value));
+					localPairs.Add(new Tuple<long, long>(seedRange.Item1 + offset, value));
 				}
+
+				seedToLocationPairs.Add(localPairs.MinBy(pair => pair.Item2)!);
 			}
 
 			var result = seedToLocationPairs.Min(pair => pair.Item2);
