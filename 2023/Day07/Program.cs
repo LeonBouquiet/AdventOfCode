@@ -60,12 +60,11 @@ namespace Day07
 				Int32.Parse(parts[1]));   //Joker is represented by an 'X'.
 
 			List<Hand> permutations = hand.GenerateAllPermutationUsingJokers().ToList();
-			if (permutations.Count > 0)
-			{
-				//Use the Strenght of the best permutation, but the Cards with the Jokers.
-				permutations.Sort();
-				hand.Strength = permutations.Last().Strength;
-			}
+
+			//Use the Strenght of the best permutation, but the Cards with the Jokers.
+			permutations.Sort();
+			permutations.Reverse();
+			hand.Strength = permutations.First().Strength;
 
 			return hand;
 		}
@@ -78,6 +77,10 @@ namespace Day07
 				if (instance.Cards[cardIndex] == Card.CX)
 					instance.Cards[cardIndex] = Card.C2;
 			}
+
+			//There is always one result, with all Jokers (if any) replaced by C2's.
+			instance.Strength = instance.DetermineStrength();
+			yield return instance.Clone();
 
 			bool performedIncrement;
 			do
@@ -96,9 +99,10 @@ namespace Day07
 								instance.Cards[cardIndex] = Card.CQ;	//Skip the J, doesn't exist here.
 
 							instance.Strength = instance.DetermineStrength();
-							performedIncrement = true;
-
 							yield return instance.Clone();
+
+							performedIncrement = true;
+							break;
 						}
 						else
 						{
@@ -143,7 +147,6 @@ namespace Day07
 				if (this.Strength != other.Strength)
 					return this.Strength - other.Strength;
 
-				bool includesJokers = this.Cards.Any(c => c == Card.CX) || other.Cards.Any(c => c == Card.CX);
 				for (int index = 0; index < Cards.Length; index++)
 				{
 					if (this.Cards[index] != other.Cards[index])
@@ -166,7 +169,7 @@ namespace Day07
 	{
 		public static void Main(string[] args)
 		{
-			//Part1();
+			Part1();
 			Part2();
 		}
 
@@ -197,8 +200,9 @@ namespace Day07
 			for (int index = 0; index < hands.Count; index++)
 				result += (index + 1) * hands[index].Bid;
 
-			//False: 248118448 (too low)
-			//False: 248497077 (too high)
+			//foreach(Hand hand in hands)
+			//	Console.WriteLine(hand);
+
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
 	}
