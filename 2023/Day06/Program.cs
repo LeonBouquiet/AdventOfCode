@@ -46,9 +46,27 @@ namespace Day06
 
 		private static void Part2()
 		{
-			var result = InputReader.Read<Program>();
+			List<long> timeAndDistance = InputReader.Read<Program>()
+				.Select(line => line
+				    .Replace(" ", "")
+					.Split(':', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+					.Skip(1)
+					.Select(s => Int64.Parse(s))
+					.First())
+				.ToList();
 
-			Console.WriteLine($"The result of part 2 is: {result}");
+			long time = timeAndDistance[0];
+			long recordDistance = timeAndDistance[1];
+
+			long winCount = 0;
+			for (long holdButtonTime = 0; holdButtonTime < time; holdButtonTime++)
+			{
+				long distance = holdButtonTime * (time - holdButtonTime);
+				if (distance > recordDistance)
+					winCount++;
+			}
+
+			Console.WriteLine($"The result of part 2 is: {winCount}");
 		}
 
 	}
