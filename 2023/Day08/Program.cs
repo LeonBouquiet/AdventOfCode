@@ -90,35 +90,36 @@ namespace Day08
 			List<Node> nodes = sections[1]
 				.Select(line => Node.Parse(line))
 				.ToList();
-
 			Dictionary<string, Node> nodeMap = nodes
 				.ToDictionary(node => node.Name, StringComparer.OrdinalIgnoreCase);
 
-			List<string> currentNodeNames = nodes
+			List<string> startingNodeNames = nodes
 				.Where(n => n.Name.EndsWith('A'))
 				.Select(n => n.Name)
 				.ToList();
 
-			int step = 0;
-			for (; step < 1000000000; step++)
-			{
-				int endingNodeCount = 0;
-				for(int index = 0; index < currentNodeNames.Count; index++)
+			foreach (string startingNodeName in startingNodeNames)
+			{ 
+				string currentNodeName = startingNodeName;
+				HashSet<Tuple<long, string>> nodeNamesVisited = new HashSet<Tuple<long, string>>();
+				List<long> endingNodeSteps = new List<long>();
+
+				int step = 0;
+				for (; step < 1000000; step++)
 				{
-					Node current = nodeMap[currentNodeNames[index]];
-					currentNodeNames[index] = current.GetNodeNameByDirection(directions[step % directions.Count]);
+					nodeNamesVisited.Add(new Tuple<long, string>(step % directions.Count, currentNodeName));
+					if (currentNodeName.EndsWith('Z'))
+					{
+						Console.WriteLine($"For starting node {startingNodeName}, found an end node at {step} named {currentNodeName}.");
+						endingNodeSteps.Add(step);
+					}
 
-					if (currentNodeNames[index].EndsWith('Z'))
-						endingNodeCount++;
+					Node current = nodeMap[currentNodeName];
+					currentNodeName = current.GetNodeNameByDirection(directions[step % directions.Count]);
 				}
-
-				if (endingNodeCount > 2)
-					Console.WriteLine($"Step {step + 1}: Reached {endingNodeCount} ending nodes, at positions: ({string.Join(", ", currentNodeNames)}) ");
-				if (endingNodeCount == currentNodeNames.Count)
-					break;
 			}
 
-
+			//Take the loop lengths, divide them all by 277 (their Lowest Common Denominator), and use 277 * L1 * L2 * ... L6 as the answer.
 			var result = 0;
 			Console.WriteLine($"The result of part 2 is: {result}");
 		}
