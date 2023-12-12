@@ -8,11 +8,11 @@ namespace Shared
 {
 	public class Grid<TData>
 	{
-		public int Width { get; private set; }
+		public int Width { get; protected set; }
 
-		public int Height { get; private set; }
+		public int Height { get; protected set; }
 
-		private TData[,] _cells;
+		protected TData[,] _cells;
 
 		public TData this[Location loc]
 		{
